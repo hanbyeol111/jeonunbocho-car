@@ -1,0 +1,12 @@
+<resources>
+    <style name="Theme.Jeonunbochocar" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/jb_accent</item>
+        <item name="colorPrimaryVariant">@color/jb_navy</item>
+        <item name="colorOnPrimary">@color/jb_background</item>
+        <item name="colorSecondary">@color/jb_accent</item>
+        <item name="colorOnSecondary">@color/jb_background</item>
+        <item name="android:windowBackground">@color/jb_background</item>
+        <item name="android:statusBarColor">@color/jb_background</item>
+        <item name="materialButtonStyle">@style/Jb.Button</item>
+    </style>
+</resources>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="32dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="전운보초"
+        android:textSize="36sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/levelText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_level_card"
+        android:padding="20dp"
+        android:text="Lv.1 · 0 / 50p"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/navStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="24dp"
+        android:text="내비 연결 중…"
+        android:textColor="@color/jb_text_secondary"
+        android:textSize="18sp" />
+
+    <Button
+        android:id="@+id/btnLoop"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:text="순환 코스"
+        android:textSize="24sp" />
+
+    <Button
+        android:id="@+id/btnElement"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:layout_marginTop="16dp"
+        android:text="요소 집중"
+        android:textSize="24sp" />
+
+    <Button
+        android:id="@+id/btnLevel"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:layout_marginTop="16dp"
+        android:text="난이도별 코스"
+        android:textSize="24sp" />
+
+    <Button
+        android:id="@+id/btnDestination"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:layout_marginTop="16dp"
+        android:text="목적지 안내"
+        android:textSize="24sp" />
+</LinearLayout>
