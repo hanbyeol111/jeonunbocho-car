@@ -32,13 +32,27 @@ class GuidanceTest {
     }
 
     @Test
-    fun showsNearestPracticePoint() {
+    fun addsSegmentDistancesUpToFirstPracticePoint() {
         val list = listOf(
             tbt(TurnType.TURN_LEFT, 50.0),
-            tbt(TurnType.TURN_TUNNEL, 1200.0),
-            tbt(TurnType.TURN_UTURN, 300.0),
+            tbt(TurnType.TURN_RIGHT, 250.0),
+            tbt(TurnType.TURN_UTURN, 100.0),
         )
-        assertEquals(NextPractice("300m", PracticeElement.U_TURN), nextPractice(list))
+        assertEquals(NextPractice("400m", PracticeElement.U_TURN), nextPractice(list))
+    }
+
+    // 에뮬레이터에서 나온 실제 사례: 구간 거리가 가장 작은 뒤쪽 유턴이 아니라 순서상 첫 IC를 골라야 한다.
+    @Test
+    fun laterPointWithShortSegmentIsNotPicked() {
+        val list = listOf(
+            tbt(TurnType.TURN_LEFT, 80.0),
+            tbt(TurnType.TURN_RIGHT, 380.0),
+            tbt(TurnType.TURN_AVOID_UNDER_R, 730.0),
+            tbt(TurnType.TURN_ENTER_IC_R, 1700.0),
+            tbt(TurnType.TURN_EXIT_IC_R, 10000.0),
+            tbt(TurnType.TURN_UTURN, 80.0),
+        )
+        assertEquals(NextPractice("2.9km", PracticeElement.HIGHWAY_IC), nextPractice(list))
     }
 
     @Test

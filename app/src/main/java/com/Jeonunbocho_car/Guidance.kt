@@ -25,8 +25,13 @@ fun formatDistance(meters: Double): String =
 
 data class NextPractice(val distance: String, val element: PracticeElement)
 
-// shortcut: distance를 현재 위치부터의 거리로 가정한다. 에뮬레이터에서 기준이 다르면 누적 계산으로 바꾼다.
-fun nextPractice(tbtList: List<TBTInfo>): NextPractice? = tbtList
-    .mapNotNull { tbt -> tbt.type.toPracticeElement()?.let { tbt to it } }
-    .minByOrNull { (tbt, _) -> tbt.distance }
-    ?.let { (tbt, element) -> NextPractice(formatDistance(tbt.distance), element) }
+// TBT 목록은 경로 전체이고 distance는 이전 안내 지점부터의 구간 거리다(에뮬레이터 로그로 확인).
+// 그래서 순서대로 더하다가 처음 만나는 연습 상황을 고른다.
+fun nextPractice(tbtList: List<TBTInfo>): NextPractice? {
+    var fromHere = 0.0
+    for (tbt in tbtList) {
+        fromHere += tbt.distance
+        tbt.type.toPracticeElement()?.let { return NextPractice(formatDistance(fromHere), it) }
+    }
+    return null
+}
