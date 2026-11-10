@@ -1,53 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="32dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="순환 코스"
-        android:textSize="32sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/distanceText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="32dp"
-        android:text="5.0 km"
-        android:textSize="48sp"
-        android:textStyle="bold" />
-
-    <com.google.android.material.slider.Slider
-        android:id="@+id/distanceSlider"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:stepSize="0.1"
-        android:value="5.0"
-        android:valueFrom="1.0"
-        android:valueTo="50.0"
-        app:labelBehavior="gone" />
+        android:orientation="vertical"
+        android:padding="32dp">
 
-    <Button
-        android:id="@+id/btnNext"
-        style="@style/Jb.Button.Primary"
-        android:layout_width="match_parent"
-        android:layout_height="96dp"
-        android:layout_marginTop="32dp"
-        android:text="코스 만들기"
-        android:textSize="24sp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="순환 코스"
+            android:textSize="32sp"
+            android:textStyle="bold" />
 
-    <Button
-        android:id="@+id/btnBack"
-        android:layout_width="match_parent"
-        android:layout_height="96dp"
-        android:layout_marginTop="16dp"
-        android:text="뒤로"
-        android:textSize="24sp" />
-</LinearLayout>
+        <TextView
+            android:id="@+id/distanceText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="32dp"
+            android:text="5.0 km"
+            android:textSize="48sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/distanceSlider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:stepSize="0.1"
+            android:value="5.0"
+            android:valueFrom="1.0"
+            android:valueTo="50.0"
+            app:labelBehavior="gone" />
+
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/directionGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:checkedButton="@id/btnClockwise"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+            <Button
+                android:id="@+id/btnClockwise"
+                style="@style/Jb.Button.Toggle"
+                android:layout_width="0dp"
+                android:layout_height="96dp"
+                android:layout_weight="1"
+                android:text="시계 방향(우회전 위주)" />
+
+            <Button
+                android:id="@+id/btnCounterClockwise"
+                style="@style/Jb.Button.Toggle"
+                android:layout_width="0dp"
+                android:layout_height="96dp"
+                android:layout_weight="1"
+                android:text="반시계 방향(좌회전 위주)" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+
+        <Button
+            android:id="@+id/btnNext"
+            style="@style/Jb.Button.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="96dp"
+            android:layout_marginTop="32dp"
+            android:text="코스 만들기"
+            android:textSize="24sp" />
+
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="match_parent"
+            android:layout_height="96dp"
+            android:layout_marginTop="16dp"
+            android:text="뒤로"
+            android:textSize="24sp" />
+    </LinearLayout>
+</ScrollView>

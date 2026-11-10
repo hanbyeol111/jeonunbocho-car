@@ -45,7 +45,7 @@
         android:layout_width="match_parent"
         android:layout_height="96dp"
         android:layout_marginTop="16dp"
-        android:text="요소 집중"
+        android:text="상황별 연습"
         android:textSize="24sp" />
 
     <Button

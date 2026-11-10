@@ -15,4 +15,11 @@
         <item name="backgroundTint">@color/white</item>
         <item name="android:textColor">@color/jb_navy</item>
     </style>
+
+    <!-- 둘 중 하나를 고르는 버튼 -->
+    <style name="Jb.Button.Toggle">
+        <item name="backgroundTint">@color/jb_toggle_background</item>
+        <item name="android:textColor">@color/jb_toggle_text</item>
+        <item name="android:textSize">20sp</item>
+    </style>
 </resources>

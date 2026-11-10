@@ -19,7 +19,6 @@
         android:layout_marginTop="32dp"
         android:background="@drawable/bg_card"
         android:padding="24dp"
-        android:text="5.2km · 약 18분 예상"
         android:textSize="28sp"
         android:textStyle="bold" />
 

@@ -1,12 +1,15 @@
 package com.Jeonunbocho_car
 
+import ai.pleos.playground.navi.data.TBTInfo
 import ai.pleos.playground.navi.helper.NaviHelper
+import ai.pleos.playground.navi.helper.listener.NaviHelperEventListener
 import android.os.Bundle
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.slider.Slider
 
 class MainActivity : AppCompatActivity() {
@@ -14,6 +17,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var naviHelper: NaviHelper
     private var naviStatus = "내비 연결 중…"
     private lateinit var progress: Progress
+    private var loopKm = 5f
+    private var loopClockwise = true
+    @Volatile private var naviConnected = false
+
+    // 전운보초는 소리를 내지 않고, 주행 화면 문구만 바꾼다.
+    private val naviListener = object : NaviHelperEventListener {
+        override fun onTBTInfo(tbtInfoList: List<TBTInfo>) {
+            runOnUiThread { findViewById<TextView?>(R.id.nextPoint)?.text = nextPracticeText(tbtInfoList) }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,7 +34,12 @@ class MainActivity : AppCompatActivity() {
 
         naviHelper = NaviHelper(applicationContext)
         naviHelper.initialize(
-            onConnected = { runOnUiThread { updateNaviStatus("내비 연결됨") } },
+            onConnected = {
+                naviHelper.removeListener(naviListener)
+                naviHelper.addListener(naviListener)
+                naviConnected = true
+                runOnUiThread { updateNaviStatus("내비 연결됨") }
+            },
             onFailed = { e -> runOnUiThread { updateNaviStatus("내비 연결 실패: ${e.message}") } }
         )
         showHome()
@@ -60,10 +78,25 @@ class MainActivity : AppCompatActivity() {
     private fun showLoop() {
         setContentView(R.layout.screen_loop)
         val distanceText = findViewById<TextView>(R.id.distanceText)
-        findViewById<Slider>(R.id.distanceSlider).addOnChangeListener { _, value, _ ->
+        val slider = findViewById<Slider>(R.id.distanceSlider)
+        val directionGroup = findViewById<MaterialButtonToggleGroup>(R.id.directionGroup)
+
+        // 뒤로 갔다가 다시 와도 고른 값을 유지한다.
+        slider.value = loopKm
+        distanceText.text = "%.1f km".format(loopKm)
+        directionGroup.check(if (loopClockwise) R.id.btnClockwise else R.id.btnCounterClockwise)
+
+        slider.addOnChangeListener { _, value, _ ->
+            loopKm = value
             distanceText.text = "%.1f km".format(value)
         }
-        setupBackAndNext()
+        directionGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (isChecked) loopClockwise = checkedId == R.id.btnClockwise
+        }
+        setupBackAndNext {
+            val direction = findViewById<Button>(directionGroup.checkedButtonId).text
+            "%.1fkm · %s".format(loopKm, direction)
+        }
     }
 
     private fun showElement() {
@@ -72,7 +105,7 @@ class MainActivity : AppCompatActivity() {
         PracticeElement.entries.forEach { element ->
         val button = MaterialButton(this).apply {
             text = element.label
-            setOnClickListener { goNext() }
+            setOnClickListener { showConfirm("${element.label} 연습") }
         }
         val density = resources.displayMetrics.density
         list.addView(button, LinearLayout.LayoutParams(
@@ -84,31 +117,32 @@ class MainActivity : AppCompatActivity() {
 
     private fun showLevel() {
         setContentView(R.layout.screen_level)
-        setupBackAndNext()
+        val course = courseForLevel(progress.level)
+        findViewById<TextView>(R.id.levelRecommend).text =
+            "Lv.${course.level} 추천 코스\n${course.summary}"
+        setupBackAndNext { "Lv.${course.level} · ${course.summary}" }
     }
 
     private fun showDestination() {
         setContentView(R.layout.screen_destination)
-        setupBackAndNext()
+        setupBackAndNext { "목적지 안내" }
     }
 
-    private fun setupBackAndNext() {
+    private fun setupBackAndNext(courseInfo: () -> String) {
         findViewById<Button>(R.id.btnBack).setOnClickListener { showHome() }
-        findViewById<Button>(R.id.btnNext).setOnClickListener { goNext() }
+        findViewById<Button>(R.id.btnNext).setOnClickListener { showConfirm(courseInfo()) }
     }
 
-    private fun goNext() {
-        showConfirm()
-    }
-
-    private fun showConfirm() {
+    private fun showConfirm(courseInfo: String) {
         setContentView(R.layout.screen_confirm)
+        findViewById<TextView>(R.id.courseInfo).text = courseInfo
         findViewById<Button>(R.id.btnStart).setOnClickListener { showDrive() }
         findViewById<Button>(R.id.btnCancel).setOnClickListener { showHome() }
     }
 
     private fun showDrive() {
         setContentView(R.layout.screen_drive)
+        if (naviConnected) naviHelper.getTBTInfo()
         // 도착 감지(onDestinationArrived)를 연결하면 임시 버튼과 함께 지운다.
         findViewById<Button>(R.id.btnArrive).setOnClickListener { showResult() }
     }
@@ -141,6 +175,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        naviHelper.removeListener(naviListener)
         naviHelper.release()
         super.onDestroy()
     }

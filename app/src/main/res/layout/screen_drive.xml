@@ -17,18 +17,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="300m 앞 유턴"
+        android:text="안내를 기다리는 중"
         android:textSize="44sp"
         android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/practiceProgress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="연습 지점 1 / 2"
-        android:textColor="@color/jb_text_secondary"
-        android:textSize="20sp" />
 
     <Space
         android:layout_width="match_parent"
