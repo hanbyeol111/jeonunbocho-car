@@ -13,31 +13,103 @@
         android:textColor="@color/jb_text_secondary"
         android:textSize="22sp" />
 
-    <LinearLayout
+    <!-- 연습 상황이 멀 때: 작은 한 줄 -->
+    <TextView
+        android:id="@+id/practiceFar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_card"
+        android:padding="20dp"
+        android:text="안내를 기다리는 중"
+        android:textSize="26sp"
+        android:textStyle="bold" />
+
+    <!-- 연습 상황이 가까울 때: 할 일 코칭 -->
+    <LinearLayout
+        android:id="@+id/practiceCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:background="@drawable/bg_level_card"
-        android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="40dp">
+        android:padding="24dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="bottom"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/nextPoint"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="40sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/nextDistance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:textColor="@color/jb_accent_soft"
+                android:textSize="40sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <TextView
-            android:id="@+id/nextDistance"
+            android:id="@+id/coachingText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="96sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
+            android:layout_marginTop="12dp"
+            android:lineSpacingExtra="8dp"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/lanePrepCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_card"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="gone">
 
         <TextView
-            android:id="@+id/nextPoint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="안내를 기다리는 중"
-            android:textSize="44sp"
+            android:text="차선 준비"
+            android:textColor="@color/jb_text_secondary"
+            android:textSize="22sp" />
+
+        <TextView
+            android:id="@+id/lanePrepTurn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="36sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/lanePrepAdvice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/jb_accent_soft"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/lanePrepSignal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="26sp"
             android:textStyle="bold" />
     </LinearLayout>
 

@@ -54,4 +54,30 @@ class CourseTest {
     fun unknownLevelIsRejected() {
         courseForLevel(11)
     }
+
+    @Test
+    fun bestCaseAddsDistanceSituationSignalAndSafety() {
+        // Lv.4: 거리 10 + 급회전 12 + 방향지시등 3 + 안전 보너스 10
+        val best = courseForLevel(4).bestCase
+        assertEquals(10, best.distance)
+        assertEquals(12, best.elements)
+        assertEquals(3, best.turnSignalBonus)
+        assertEquals(10, best.safetyBonus)
+        assertEquals(35, best.total)
+        // Lv.1은 상황이 없어 거리 3 + 안전 보너스 10
+        assertEquals(13, courseForLevel(1).bestCase.total)
+    }
+
+    @Test
+    fun runsRoundUp() {
+        assertEquals(4, courseForLevel(4).runsFor(140))
+        assertEquals(1, courseForLevel(4).runsFor(35))
+        assertEquals(2, courseForLevel(4).runsFor(36))
+    }
+
+    @Test
+    fun routeOptionsHaveKoreanNames() {
+        assertEquals("추천 경로", RouteOption.RECOMMENDED.label)
+        assertEquals("고속도로 우선", RouteOption.HIGHWAY.label)
+    }
 }

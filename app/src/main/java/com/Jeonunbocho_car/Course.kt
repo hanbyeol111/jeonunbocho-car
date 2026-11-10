@@ -33,3 +33,26 @@ private val LEVEL_COURSES = listOf(
 )
 
 fun courseForLevel(level: Int): LevelCourse = LEVEL_COURSES.first { it.level == level }
+
+// 완주했을 때 받을 수 있는 최대 포인트. 상황마다 방향지시등을 켜고 과속·급감속이 없다고 본다.
+// 예상 시간 포인트는 경로를 받아야 알 수 있어서 빼고, 주의 지점 보너스도 경로마다 달라 뺀다.
+val LevelCourse.bestCase: EarnedPoints
+    get() = calculatePoints(
+        DriveRecord(distanceKm.toDouble(), 0, elements.map { PassedElement(it, turnSignalOn = true) })
+    )
+
+// 남은 포인트를 이 코스의 최대 포인트로 채우려면 몇 번 달려야 하는지(올림).
+fun LevelCourse.runsFor(remainingPoints: Int): Int =
+    (remainingPoints + bestCase.total - 1) / bestCase.total
+
+// SDK 경로 옵션 이름을 우리말로 옮긴 것. 기본 내비 메뉴 이름과 같은지는 확인하지 못했다.
+val RouteOption.label: String
+    get() = when (this) {
+        RouteOption.COMFORTABLE -> "편안한 길"
+        RouteOption.RECOMMENDED -> "추천 경로"
+        RouteOption.SHORT_TIME -> "최소 시간"
+        RouteOption.SHORT_DISTANCE -> "최단 거리"
+        RouteOption.HIGHWAY -> "고속도로 우선"
+        RouteOption.FREE -> "무료 도로"
+        RouteOption.SCHOOL_ZONE -> "어린이보호구역 회피"
+    }

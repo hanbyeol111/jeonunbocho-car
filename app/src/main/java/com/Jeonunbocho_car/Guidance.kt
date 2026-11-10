@@ -23,15 +23,111 @@ fun TurnType.toPracticeElement(): PracticeElement? = when {
 fun formatDistance(meters: Double): String =
     if (meters < 1000) "${meters.roundToInt()}m" else "%.1fkm".format(meters / 1000)
 
-data class NextPractice(val distance: String, val element: PracticeElement)
+// 방향지시등 시기: 도로교통법 시행령 별표 2 (행위 지점 30m 전, 고속도로 100m 전).
+private const val SIGNAL_ROAD = 30
+private const val SIGNAL_HIGHWAY = 100
+
+private fun side(type: TurnType): String? = when {
+    type.name.endsWith("_R") -> "오른쪽"
+    type.name.endsWith("_L") || type == TurnType.TURN_LEFT || type == TurnType.TURN_UTURN -> "왼쪽"
+    type == TurnType.TURN_RIGHT -> "오른쪽"
+    else -> null
+}
+
+private fun signal(type: TurnType, meters: Int): String =
+    side(type)?.let { "${meters}m 전부터 $it 깜빡이" } ?: "차로를 바꿀 때 깜빡이"
+
+// 주행 중 코칭 문구. 근거: 도로교통법 제14·18·19·22·25조의2·31·37·38·62·65조.
+// Pleos 디자인 가이드에 따라 한 번에 3줄을 넘지 않는다.
+fun TurnType.coaching(): List<String> = when {
+    this == TurnType.TURN_TUNNEL -> listOf("전조등 켜기", "터널 안에서는 앞지르기 금지")
+    name.startsWith("TURN_ENTER_UNDER") -> listOf("경로는 지하차도로 들어가요", "옆길로 빠지지 않게 차선 유지")
+    name.startsWith("TURN_ENTER_OVER") -> listOf("경로는 고가도로로 올라가요", "옆길로 빠지지 않게 차선 유지")
+    this == TurnType.TURN_SHARP_R || this == TurnType.TURN_SHARP_L ->
+        listOf("속도를 줄여 천천히", "커브 안에서는 차선 유지")
+    this == TurnType.TURN_KEEP_R || this == TurnType.TURN_KEEP_L ->
+        listOf("${side(this)} 길로 가요", "실선 구간에서는 차선 변경 금지", "차로를 바꿀 때 ${side(this)} 깜빡이")
+    name.startsWith("TURN_ENTER_ROUNDABOUT") ->
+        listOf("진입 전 서행, 안에 있는 차가 먼저", "반시계 방향으로 돌아요", "진입·진출할 때 깜빡이")
+    this == TurnType.TURN_UTURN ->
+        listOf("유턴 표지·신호 확인", "맞은편 차가 없을 때 돌기", signal(this, SIGNAL_ROAD))
+    this == TurnType.TURN_DEVIDE_MERGE ->
+        listOf("옆 차선 차 먼저 확인", "방해되면 기다렸다가 들어가기", "차로를 바꿀 때 깜빡이")
+    name.startsWith("TURN_ENTER_IC") -> listOf("본선을 달리는 차가 먼저", signal(this, SIGNAL_ROAD))
+    name.startsWith("TURN_EXIT_IC") ->
+        listOf("출구 차선으로 미리 이동", "지나쳤으면 다음 출구로", signal(this, SIGNAL_HIGHWAY))
+    else -> emptyList()
+}
+
+// shortcut: 크게 보여주는 거리는 근거 없이 정한 값이다. 실제 주행으로 확인한 뒤 조정한다.
+private const val NEAR_ROAD_M = 300.0
+private const val NEAR_HIGHWAY_M = 1000.0
+
+private data class Ahead(val index: Int, val meters: Double, val type: TurnType)
 
 // TBT 목록은 경로 전체이고 distance는 이전 안내 지점부터의 구간 거리다(에뮬레이터 로그로 확인).
-// 그래서 순서대로 더하다가 처음 만나는 연습 상황을 고른다.
-fun nextPractice(tbtList: List<TBTInfo>): NextPractice? {
+// 그래서 순서대로 더하다가 처음 고른 지점과 그 지점까지의 거리를 돌려준다.
+private fun firstAhead(tbtList: List<TBTInfo>, pick: (TurnType) -> Boolean): Ahead? {
     var fromHere = 0.0
-    for (tbt in tbtList) {
+    tbtList.forEachIndexed { index, tbt ->
         fromHere += tbt.distance
-        tbt.type.toPracticeElement()?.let { return NextPractice(formatDistance(fromHere), it) }
+        if (pick(tbt.type)) return Ahead(index, fromHere, tbt.type)
     }
     return null
 }
+
+data class NextPractice(
+    val index: Int,
+    val meters: Double,
+    val type: TurnType,
+    val element: PracticeElement,
+    val coaching: List<String>,
+) {
+    val distance: String get() = formatDistance(meters)
+
+    // 고속도로 IC는 진입과 진출을 나눠서 말한다.
+    val title: String
+        get() = when {
+            type.name.startsWith("TURN_ENTER_IC") -> "고속도로 진입"
+            type.name.startsWith("TURN_EXIT_IC") -> "고속도로 진출"
+            else -> element.label
+        }
+    val isNear: Boolean
+        get() = meters <= if (element == PracticeElement.HIGHWAY_IC) NEAR_HIGHWAY_M else NEAR_ROAD_M
+}
+
+fun nextPractice(tbtList: List<TBTInfo>): NextPractice? =
+    firstAhead(tbtList) { it.toPracticeElement() != null }?.let {
+        NextPractice(it.index, it.meters, it.type, it.type.toPracticeElement()!!, it.type.coaching())
+    }
+
+data class LanePrep(val index: Int, val distance: String, val turn: String, val advice: String, val signal: String)
+
+private const val LEFT_LANE = "왼쪽 차선으로 미리 가 두면 편해요"
+private const val RIGHT_LANE = "오른쪽 끝 차선으로 미리 가 두면 편해요"
+
+// 차선 번호 데이터가 SDK에 없어서 방향만 참고로 알려준다. 차선 번호 안내는 확장 과제로 남긴다.
+private fun TurnType.lanePrep(): Pair<String, String>? = when (this) {
+    TurnType.TURN_LEFT -> "좌회전" to LEFT_LANE
+    TurnType.TURN_SHARP_L -> "급좌회전" to LEFT_LANE
+    TurnType.TURN_UTURN -> "유턴" to LEFT_LANE
+    TurnType.TURN_RIGHT -> "우회전" to RIGHT_LANE
+    TurnType.TURN_SHARP_R -> "급우회전" to RIGHT_LANE
+    TurnType.TURN_ENTER_IC_L, TurnType.TURN_EXIT_IC_L -> "왼쪽 진출입로" to LEFT_LANE
+    TurnType.TURN_ENTER_IC_R, TurnType.TURN_EXIT_IC_R -> "오른쪽 진출입로" to RIGHT_LANE
+    TurnType.TURN_KEEP_L -> "왼쪽 길" to "왼쪽 차선을 따라가면 편해요"
+    TurnType.TURN_KEEP_R -> "오른쪽 길" to "오른쪽 차선을 따라가면 편해요"
+    else -> null
+}
+
+private fun TurnType.laneSignal(): String = when {
+    name.startsWith("TURN_KEEP") -> "차로를 바꿀 때 ${side(this)} 깜빡이"
+    name.startsWith("TURN_EXIT_IC") -> signal(this, SIGNAL_HIGHWAY)
+    else -> signal(this, SIGNAL_ROAD)
+}
+
+fun nextLanePrep(tbtList: List<TBTInfo>): LanePrep? =
+    firstAhead(tbtList) { it.lanePrep() != null }?.let {
+        val (turn, advice) = it.type.lanePrep()!!
+        LanePrep(it.index, formatDistance(it.meters), turn, advice, it.type.laneSignal())
+    }
