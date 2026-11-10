@@ -143,8 +143,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
         search = null
-        val route = "실제 %.1fkm · 약 %d분".format(start.distance / 1000.0, (start.duration + 59) / 60)
-        showConfirm("${s.title}\n$route", routeActive = true)
+        showConfirm(s.title, summarizeRoute(start.distance, start.duration, tbtList))
     }
 
     // 응답이 없거나 오류가 나거나 필요한 상황이 없으면 다음 후보로 넘어간다.
@@ -409,16 +408,53 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btnNext).setOnClickListener { showConfirm(courseInfo()) }
     }
 
-    // routeActive: 길 찾기로 기본 내비에 경로가 이미 걸려 있는 경우. 뒤로 가면 취소한다.
-    private fun showConfirm(courseInfo: String, routeActive: Boolean = false) {
+    // route: 길 찾기로 기본 내비에 걸어 둔 순환 경로의 요약. 있으면 뒤로 갈 때 경로를 취소한다.
+    private fun showConfirm(title: String, route: RouteSummary? = null) {
         setContentView(R.layout.screen_confirm)
-        findViewById<TextView>(R.id.courseInfo).text = courseInfo
-        findViewById<Button>(R.id.btnStart).setOnClickListener {
-            showDrive(courseInfo.substringBefore('\n'))
-        }
+        findViewById<TextView>(R.id.courseInfo).text = title
+        findViewById<Button>(R.id.btnStart).setOnClickListener { showDrive(title) }
         findViewById<Button>(R.id.btnBack).setOnClickListener {
-            if (routeActive) naviHelper.cancelRoute()
+            if (route != null) naviHelper.cancelRoute()
             showHome()
+        }
+        if (route == null) return
+
+        findViewById<View>(R.id.routeLine).visibility = View.VISIBLE
+        findViewById<TextView>(R.id.routeDistance).text = "%.1fkm".format(route.distanceM / 1000.0)
+        findViewById<TextView>(R.id.routeTime).text = "약 ${route.minutes}분"
+        findViewById<View>(R.id.routeNote).visibility = View.VISIBLE
+
+        findViewById<View>(R.id.summaryCard).visibility = View.VISIBLE
+        findViewById<TextView>(R.id.statRight).text = "${route.rightTurns}\n우회전"
+        findViewById<TextView>(R.id.statLeft).text = "${route.leftTurns}\n좌회전"
+        findViewById<TextView>(R.id.statUturn).text = "${route.uTurns}\n유턴"
+        findViewById<TextView>(R.id.routeSituations).text =
+            route.situations.joinToString(" · ") { (name, count) -> "$name ${count}곳" }.ifEmpty { "없음" }
+        val first = route.firstPrep
+        if (first == null) {
+            findViewById<View>(R.id.routeFirstGroup).visibility = View.GONE
+        } else {
+            findViewById<TextView>(R.id.routeFirst).text = "${first.distance} 앞 ${first.turn}"
+            findViewById<TextView>(R.id.routeFirstAdvice).text = first.advice
+        }
+
+        findViewById<View>(R.id.pointsCard).visibility = View.VISIBLE
+        val best = route.bestPoints
+        val rows = findViewById<LinearLayout>(R.id.pointRows)
+        buildList {
+            add("거리 ${route.distanceM / 1000}km" to "+${best.distance}p")
+            add("예상 시간 ${route.minutes}분" to "+${best.time}p")
+            if (best.elements > 0) {
+                val names = route.practiceElements.distinct().joinToString(", ") { it.label }
+                add(names to "+${best.elements}p")
+            }
+            if (best.turnSignalBonus > 0) add("방향지시등 사용" to "최대 +${best.turnSignalBonus}p")
+            add("안전 운전 보너스" to "최대 +${best.safetyBonus}p")
+        }.forEach { (label, value) ->
+            val row = layoutInflater.inflate(R.layout.item_result_row, rows, false)
+            row.findViewById<TextView>(R.id.rowLabel).text = label
+            row.findViewById<TextView>(R.id.rowValue).text = value
+            rows.addView(row)
         }
     }
 

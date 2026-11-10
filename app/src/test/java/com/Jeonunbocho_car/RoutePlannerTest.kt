@@ -75,6 +75,33 @@ class RoutePlannerTest {
     }
 
     @Test
+    fun summaryCountsTurnsSituationsAndPoints() {
+        val route = listOf(
+            TBTInfo(TurnType.TURN_LEFT, 80.0, ""),
+            TBTInfo(TurnType.TURN_RIGHT, 200.0, ""),
+            TBTInfo(TurnType.TURN_ENTER_ROUNDABOUT_06, 300.0, ""),
+            TBTInfo(TurnType.TURN_RIGHT, 100.0, ""),
+            TBTInfo(TurnType.TURN_UTURN, 400.0, ""),
+            TBTInfo(TurnType.TURN_TUNNEL, 500.0, ""),
+            TBTInfo(TurnType.TURN_ENTER_ROUNDABOUT_03, 300.0, ""),
+            TBTInfo(TurnType.TURN_ARRIVE, 50.0, ""),
+        )
+        val s = summarizeRoute(distanceM = 6200, durationS = 1080, tbtList = route)
+        assertEquals(2, s.rightTurns)
+        assertEquals(1, s.leftTurns)
+        assertEquals(1, s.uTurns)
+        assertEquals(listOf("회전교차로" to 2, "터널" to 1), s.situations)
+        assertEquals("좌회전", s.firstPrep?.turn)
+        assertEquals(18, s.minutes)
+        // 거리 6 + 시간 18분/5 = 3 + 회전교차로 14×2 + 유턴 15 + 터널 10 + 방향지시등 3×4 + 안전 10
+        assertEquals(6, s.bestPoints.distance)
+        assertEquals(3, s.bestPoints.time)
+        assertEquals(53, s.bestPoints.elements)
+        assertEquals(12, s.bestPoints.turnSignalBonus)
+        assertEquals(10, s.bestPoints.safetyBonus)
+    }
+
+    @Test
     fun searchStopsAfterMaxAttempts() {
         val s = search(listOf(PracticeElement.TUNNEL))
         repeat(MAX_SEARCH_ATTEMPTS - 1) { assertTrue(s.nextAttempt()) }

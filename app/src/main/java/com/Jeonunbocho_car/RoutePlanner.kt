@@ -1,6 +1,7 @@
 package com.Jeonunbocho_car
 
 import ai.pleos.playground.navi.constants.RouteOption
+import ai.pleos.playground.navi.constants.TurnType
 import ai.pleos.playground.navi.data.TBTInfo
 import kotlin.math.cos
 import kotlin.math.sin
@@ -56,4 +57,41 @@ class CourseSearch(
         attempt++
         return attempt < MAX_SEARCH_ATTEMPTS
     }
+}
+
+// 출발 전 코스 확인 화면에 보여줄 요약. 모두 내비가 준 경로 데이터에서 센다.
+data class RouteSummary(
+    val distanceM: Int,
+    val durationS: Int,
+    val rightTurns: Int,
+    val leftTurns: Int,
+    val uTurns: Int,
+    // 유턴을 뺀 연습 상황과 개수. 경로에 나오는 순서대로.
+    val situations: List<Pair<String, Int>>,
+    val firstPrep: LanePrep?,
+    // 모든 연습 상황에서 방향지시등을 켜고 과속·급감속이 없을 때의 최대치.
+    val bestPoints: EarnedPoints,
+    val practiceElements: List<PracticeElement>,
+) {
+    val minutes: Int get() = (durationS + 59) / 60
+}
+
+fun summarizeRoute(distanceM: Int, durationS: Int, tbtList: List<TBTInfo>): RouteSummary {
+    val types = tbtList.map { it.type }
+    val practice = types.filter { it.toPracticeElement() != null }
+    val elements = practice.map { it.toPracticeElement()!! }
+    return RouteSummary(
+        distanceM = distanceM,
+        durationS = durationS,
+        rightTurns = types.count { it == TurnType.TURN_RIGHT || it == TurnType.TURN_SHARP_R },
+        leftTurns = types.count { it == TurnType.TURN_LEFT || it == TurnType.TURN_SHARP_L },
+        uTurns = types.count { it == TurnType.TURN_UTURN },
+        situations = practice.filter { it != TurnType.TURN_UTURN }
+            .map { practiceTitle(it) }.groupingBy { it }.eachCount().toList(),
+        firstPrep = nextLanePrep(tbtList),
+        bestPoints = calculatePoints(
+            DriveRecord(distanceM / 1000.0, (durationS + 59) / 60, elements.map { PassedElement(it, turnSignalOn = true) })
+        ),
+        practiceElements = elements,
+    )
 }

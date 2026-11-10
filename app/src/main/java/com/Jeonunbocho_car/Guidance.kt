@@ -20,6 +20,13 @@ fun TurnType.toPracticeElement(): PracticeElement? = when {
     else -> null
 }
 
+// 고속도로 IC는 진입과 진출을 나눠서 말한다.
+fun practiceTitle(type: TurnType): String = when {
+    type.name.startsWith("TURN_ENTER_IC") -> "고속도로 진입"
+    type.name.startsWith("TURN_EXIT_IC") -> "고속도로 진출"
+    else -> type.toPracticeElement()?.label ?: type.name
+}
+
 fun formatDistance(meters: Double): String =
     if (meters < 1000) "${meters.roundToInt()}m" else "%.1fkm".format(meters / 1000)
 
@@ -85,13 +92,7 @@ data class NextPractice(
 ) {
     val distance: String get() = formatDistance(meters)
 
-    // 고속도로 IC는 진입과 진출을 나눠서 말한다.
-    val title: String
-        get() = when {
-            type.name.startsWith("TURN_ENTER_IC") -> "고속도로 진입"
-            type.name.startsWith("TURN_EXIT_IC") -> "고속도로 진출"
-            else -> element.label
-        }
+    val title: String get() = practiceTitle(type)
     val isNear: Boolean
         get() = meters <= if (element == PracticeElement.HIGHWAY_IC) NEAR_HIGHWAY_M else NEAR_ROAD_M
 }
