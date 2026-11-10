@@ -4,12 +4,14 @@ import ai.pleos.playground.navi.data.TBTInfo
 import ai.pleos.playground.navi.helper.NaviHelper
 import ai.pleos.playground.navi.helper.listener.NaviHelperEventListener
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.button.MaterialButtonToggleGroup
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.slider.Slider
 
 class MainActivity : AppCompatActivity() {
@@ -24,8 +26,15 @@ class MainActivity : AppCompatActivity() {
     // 전운보초는 소리를 내지 않고, 주행 화면 문구만 바꾼다.
     private val naviListener = object : NaviHelperEventListener {
         override fun onTBTInfo(tbtInfoList: List<TBTInfo>) {
-            runOnUiThread { findViewById<TextView?>(R.id.nextPoint)?.text = nextPracticeText(tbtInfoList) }
+            runOnUiThread { showNextPractice(nextPractice(tbtInfoList)) }
         }
+    }
+
+    private fun showNextPractice(next: NextPractice?) {
+        val distance = findViewById<TextView?>(R.id.nextDistance) ?: return
+        distance.text = next?.distance
+        distance.visibility = if (next == null) View.GONE else View.VISIBLE
+        findViewById<TextView>(R.id.nextPoint).text = next?.element?.label ?: NO_PRACTICE_AHEAD
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,13 +75,20 @@ class MainActivity : AppCompatActivity() {
     private fun showHome() {
         setContentView(R.layout.screen_home)
         findViewById<TextView>(R.id.navStatus).text = naviStatus
-        findViewById<TextView>(R.id.levelText).text = progress.required
-            ?.let { "Lv.${progress.level} · ${progress.points} / ${it}p" }
-            ?: "Lv.$MAX_LEVEL · MAX"
-        findViewById<Button>(R.id.btnLoop).setOnClickListener { showLoop() }
-        findViewById<Button>(R.id.btnElement).setOnClickListener { showElement() }
-        findViewById<Button>(R.id.btnLevel).setOnClickListener { showLevel() }
-        findViewById<Button>(R.id.btnDestination).setOnClickListener { showDestination() }
+        val required = progress.required
+        findViewById<TextView>(R.id.levelValue).text =
+            if (required == null) "Lv.$MAX_LEVEL · MAX" else "Lv.${progress.level}"
+        findViewById<TextView>(R.id.levelPoints).text = required?.let { "${progress.points} / ${it}p" } ?: ""
+        findViewById<LinearProgressIndicator>(R.id.levelProgress).progress =
+            required?.let { progress.points * 100 / it } ?: 100
+        findViewById<TextView>(R.id.levelHint).text =
+            required?.let { "다음 레벨까지 ${it - progress.points}p" } ?: "최고 레벨이에요"
+        findViewById<TextView>(R.id.levelCourseHint).text =
+            "Lv.${progress.level} 추천 · ${courseForLevel(progress.level).summary}"
+        findViewById<View>(R.id.btnLoop).setOnClickListener { showLoop() }
+        findViewById<View>(R.id.btnElement).setOnClickListener { showElement() }
+        findViewById<View>(R.id.btnLevel).setOnClickListener { showLevel() }
+        findViewById<View>(R.id.btnDestination).setOnClickListener { showDestination() }
     }
 
     private fun showLoop() {
@@ -136,12 +152,13 @@ class MainActivity : AppCompatActivity() {
     private fun showConfirm(courseInfo: String) {
         setContentView(R.layout.screen_confirm)
         findViewById<TextView>(R.id.courseInfo).text = courseInfo
-        findViewById<Button>(R.id.btnStart).setOnClickListener { showDrive() }
+        findViewById<Button>(R.id.btnStart).setOnClickListener { showDrive(courseInfo) }
         findViewById<Button>(R.id.btnCancel).setOnClickListener { showHome() }
     }
 
-    private fun showDrive() {
+    private fun showDrive(courseInfo: String) {
         setContentView(R.layout.screen_drive)
+        findViewById<TextView>(R.id.driveCourse).text = "연습 중 · $courseInfo"
         if (naviConnected) naviHelper.getTBTInfo()
         // 도착 감지(onDestinationArrived)를 연결하면 임시 버튼과 함께 지운다.
         findViewById<Button>(R.id.btnArrive).setOnClickListener { showResult() }

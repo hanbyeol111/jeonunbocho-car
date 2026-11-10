@@ -13,4 +13,7 @@
     <color name="jb_background">#0B1620</color>
     <color name="jb_card">#13283F</color>
     <color name="jb_text_secondary">#9FB3C8</color>
+    <color name="jb_accent_soft">#6FD8F2</color>
+    <color name="jb_track">#24405E</color>
+    <color name="jb_on_navy_secondary">#B9D3EA</color>
 </resources>

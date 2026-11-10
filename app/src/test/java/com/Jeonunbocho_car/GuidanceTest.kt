@@ -38,18 +38,18 @@ class GuidanceTest {
             tbt(TurnType.TURN_TUNNEL, 1200.0),
             tbt(TurnType.TURN_UTURN, 300.0),
         )
-        assertEquals("300m 앞 ${PracticeElement.U_TURN.label}", nextPracticeText(list))
+        assertEquals(NextPractice("300m", PracticeElement.U_TURN), nextPractice(list))
     }
 
     @Test
     fun formatsKilometers() {
-        assertEquals("1.2km 앞 ${PracticeElement.TUNNEL.label}", nextPracticeText(listOf(tbt(TurnType.TURN_TUNNEL, 1234.0))))
+        assertEquals(NextPractice("1.2km", PracticeElement.TUNNEL), nextPractice(listOf(tbt(TurnType.TURN_TUNNEL, 1234.0))))
         assertEquals("999m", formatDistance(999.4))
     }
 
     @Test
     fun noPracticePointAhead() {
-        assertEquals(NO_PRACTICE_AHEAD, nextPracticeText(emptyList()))
-        assertEquals(NO_PRACTICE_AHEAD, nextPracticeText(listOf(tbt(TurnType.TURN_RIGHT, 100.0))))
+        assertNull(nextPractice(emptyList()))
+        assertNull(nextPractice(listOf(tbt(TurnType.TURN_RIGHT, 100.0))))
     }
 }

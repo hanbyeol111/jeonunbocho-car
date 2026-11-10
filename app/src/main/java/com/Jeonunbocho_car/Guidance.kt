@@ -23,11 +23,10 @@ fun TurnType.toPracticeElement(): PracticeElement? = when {
 fun formatDistance(meters: Double): String =
     if (meters < 1000) "${meters.roundToInt()}m" else "%.1fkm".format(meters / 1000)
 
+data class NextPractice(val distance: String, val element: PracticeElement)
+
 // shortcut: distance를 현재 위치부터의 거리로 가정한다. 에뮬레이터에서 기준이 다르면 누적 계산으로 바꾼다.
-fun nextPracticeText(tbtList: List<TBTInfo>): String {
-    val next = tbtList
-        .mapNotNull { tbt -> tbt.type.toPracticeElement()?.let { tbt to it } }
-        .minByOrNull { (tbt, _) -> tbt.distance }
-        ?: return NO_PRACTICE_AHEAD
-    return "${formatDistance(next.first.distance)} 앞 ${next.second.label}"
-}
+fun nextPractice(tbtList: List<TBTInfo>): NextPractice? = tbtList
+    .mapNotNull { tbt -> tbt.type.toPracticeElement()?.let { tbt to it } }
+    .minByOrNull { (tbt, _) -> tbt.distance }
+    ?.let { (tbt, element) -> NextPractice(formatDistance(tbt.distance), element) }
