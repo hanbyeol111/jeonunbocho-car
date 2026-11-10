@@ -4,6 +4,7 @@ import ai.pleos.playground.navi.data.TBTInfo
 import ai.pleos.playground.navi.helper.NaviHelper
 import ai.pleos.playground.navi.helper.listener.NaviHelperEventListener
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
@@ -25,6 +26,9 @@ class MainActivity : AppCompatActivity() {
     // 전운보초는 소리를 내지 않고, 주행 화면 문구만 바꾼다.
     private val naviListener = object : NaviHelperEventListener {
         override fun onTBTInfo(tbtInfoList: List<TBTInfo>) {
+            // shortcut: TBT 원본 확인용 임시 로그. 유턴 표시 문제와 목록 범위를 확인하면 지운다.
+            Log.d("JbTBT", "목록 ${tbtInfoList.size}개")
+            tbtInfoList.forEach { Log.d("JbTBT", "${it.type} ${it.distance}m ${it.description}") }
             runOnUiThread { showNextPractice(nextPractice(tbtInfoList)) }
         }
     }
