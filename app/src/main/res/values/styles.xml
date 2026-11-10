@@ -16,10 +16,32 @@
         <item name="android:textColor">@color/jb_navy</item>
     </style>
 
-    <!-- 둘 중 하나를 고르는 버튼 -->
-    <style name="Jb.Button.Toggle">
+    <!-- 둘 중 하나를 고르는 카드형 버튼 -->
+    <style name="Jb.Button.Choice">
         <item name="backgroundTint">@color/jb_toggle_background</item>
-        <item name="android:textColor">@color/jb_toggle_text</item>
-        <item name="android:textSize">20sp</item>
+        <item name="strokeColor">@color/jb_toggle_stroke</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:checkable">true</item>
+        <item name="iconGravity">textTop</item>
+        <item name="iconSize">40dp</item>
+        <item name="iconTint">@color/jb_toggle_icon</item>
+        <item name="iconPadding">8dp</item>
+        <item name="android:paddingTop">20dp</item>
+        <item name="android:paddingBottom">20dp</item>
+    </style>
+
+    <!-- 화면 왼쪽 위 뒤로 버튼 -->
+    <style name="Jb.Button.Back" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="strokeColor">@color/jb_outline</item>
+        <item name="android:textColor">@color/jb_text_secondary</item>
+        <item name="android:textSize">22sp</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="icon">@drawable/ic_chevron_left</item>
+        <item name="iconTint">@color/jb_text_secondary</item>
+        <item name="android:minHeight">72dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
     </style>
 </resources>

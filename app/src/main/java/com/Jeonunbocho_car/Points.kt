@@ -47,7 +47,7 @@ data class EarnedPoints(
 }
 
 private const val MINUTES_PER_POINT = 5
-private const val TURN_SIGNAL_BONUS = 3
+const val TURN_SIGNAL_BONUS = 3
 private const val NO_SPEEDING_BONUS = 5
 private const val NO_HARD_BRAKE_BONUS = 5
 private const val CAUTION_PASS_BONUS = 2

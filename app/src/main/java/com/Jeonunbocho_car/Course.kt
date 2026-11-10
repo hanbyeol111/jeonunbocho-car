@@ -8,8 +8,11 @@ data class LevelCourse(
     val elements: List<PracticeElement>,
     val routeOption: RouteOption,
 ) {
+    val elementsText: String
+        get() = elements.joinToString(" + ") { it.label }.ifEmpty { "기본 주행" }
+
     val summary: String
-        get() = "${distanceKm}km · ${elements.joinToString(" + ") { it.label }.ifEmpty { "기본 주행" }}"
+        get() = "${distanceKm}km · $elementsText"
 }
 
 private val LEVEL_COURSES = listOf(

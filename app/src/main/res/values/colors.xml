@@ -16,4 +16,5 @@
     <color name="jb_accent_soft">#6FD8F2</color>
     <color name="jb_track">#24405E</color>
     <color name="jb_on_navy_secondary">#B9D3EA</color>
+    <color name="jb_outline">#2A4560</color>
 </resources>

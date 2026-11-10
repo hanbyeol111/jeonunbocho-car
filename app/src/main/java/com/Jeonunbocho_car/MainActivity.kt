@@ -10,7 +10,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.slider.Slider
 
@@ -95,47 +94,52 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.screen_loop)
         val distanceText = findViewById<TextView>(R.id.distanceText)
         val slider = findViewById<Slider>(R.id.distanceSlider)
-        val directionGroup = findViewById<MaterialButtonToggleGroup>(R.id.directionGroup)
+        val clockwise = findViewById<MaterialButton>(R.id.btnClockwise)
+        val counterClockwise = findViewById<MaterialButton>(R.id.btnCounterClockwise)
 
         // 뒤로 갔다가 다시 와도 고른 값을 유지한다.
         slider.value = loopKm
         distanceText.text = "%.1f km".format(loopKm)
-        directionGroup.check(if (loopClockwise) R.id.btnClockwise else R.id.btnCounterClockwise)
+        fun selectDirection(isClockwise: Boolean) {
+            loopClockwise = isClockwise
+            clockwise.isChecked = isClockwise
+            counterClockwise.isChecked = !isClockwise
+        }
+        selectDirection(loopClockwise)
 
         slider.addOnChangeListener { _, value, _ ->
             loopKm = value
             distanceText.text = "%.1f km".format(value)
         }
-        directionGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (isChecked) loopClockwise = checkedId == R.id.btnClockwise
-        }
+        // 이미 고른 버튼을 다시 눌러도 선택이 풀리지 않게 직접 정한다.
+        clockwise.setOnClickListener { selectDirection(true) }
+        counterClockwise.setOnClickListener { selectDirection(false) }
         setupBackAndNext {
-            val direction = findViewById<Button>(directionGroup.checkedButtonId).text
+            val direction = if (loopClockwise) clockwise.text else counterClockwise.text
             "%.1fkm · %s".format(loopKm, direction)
         }
     }
 
     private fun showElement() {
         setContentView(R.layout.screen_element)
-        val list = findViewById<LinearLayout>(R.id.elementList)
+        val list = findViewById<LinearLayout>(R.id.screenContent)
         PracticeElement.entries.forEach { element ->
-        val button = MaterialButton(this).apply {
-            text = element.label
-            setOnClickListener { showConfirm("${element.label} 연습") }
+            val item = layoutInflater.inflate(R.layout.item_element, list, false)
+            item.findViewById<TextView>(R.id.elementTitle).text = element.label
+            item.findViewById<TextView>(R.id.elementDesc).text =
+                "통과하면 ${element.points}p · 방향지시등 켜면 +${TURN_SIGNAL_BONUS}p"
+            item.setOnClickListener { showConfirm("${element.label} 연습") }
+            list.addView(item)
         }
-        val density = resources.displayMetrics.density
-        list.addView(button, LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, (96 * density).toInt()
-        ).apply { bottomMargin = (12 * density).toInt() })
-    }
         findViewById<Button>(R.id.btnBack).setOnClickListener { showHome() }
     }
 
     private fun showLevel() {
         setContentView(R.layout.screen_level)
         val course = courseForLevel(progress.level)
-        findViewById<TextView>(R.id.levelRecommend).text =
-            "Lv.${course.level} 추천 코스\n${course.summary}"
+        findViewById<TextView>(R.id.levelRecTitle).text = "Lv.${course.level} 추천 코스"
+        findViewById<TextView>(R.id.levelRecDistance).text = "${course.distanceKm}km"
+        findViewById<TextView>(R.id.levelRecElements).text = course.elementsText
         setupBackAndNext { "Lv.${course.level} · ${course.summary}" }
     }
 
@@ -153,7 +157,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.screen_confirm)
         findViewById<TextView>(R.id.courseInfo).text = courseInfo
         findViewById<Button>(R.id.btnStart).setOnClickListener { showDrive(courseInfo) }
-        findViewById<Button>(R.id.btnCancel).setOnClickListener { showHome() }
+        findViewById<Button>(R.id.btnBack).setOnClickListener { showHome() }
     }
 
     private fun showDrive(courseInfo: String) {
@@ -177,17 +181,26 @@ class MainActivity : AppCompatActivity() {
         saveProgress()
 
         findViewById<TextView>(R.id.earnedPoints).text = "%+dp".format(earned.total)
-        findViewById<TextView>(R.id.resultDetail).text = buildList {
+        findViewById<TextView>(R.id.resultLevel).text = progress.required
+            ?.let { "지금 Lv.${progress.level} · ${progress.points} / ${it}p" }
+            ?: "지금 Lv.$MAX_LEVEL · MAX"
+        val rows = findViewById<LinearLayout>(R.id.resultRows)
+        buildList {
             record.elements.filterNot { it.rerouted }.forEach {
                 val signal = if (it.turnSignalOn) "방향지시등 켬" else "방향지시등 안 켬"
-                add("${it.element.label} · $signal  ${it.element.points}p")
+                add("${it.element.label} · $signal" to "+${it.element.points}p")
             }
-            if (earned.turnSignalBonus > 0) add("방향지시등 보너스  ${earned.turnSignalBonus}p")
-            add("거리 %.1fkm  ${earned.distance}p".format(record.distanceKm))
-            add("예상 시간 ${record.estimatedMinutes}분  ${earned.time}p")
-            if (earned.safetyBonus > 0) add("안전 운전 보너스  ${earned.safetyBonus}p")
-            if (earned.penalty > 0) add("위험 운전 감점  -${earned.penalty}p")
-        }.joinToString("\n")
+            if (earned.turnSignalBonus > 0) add("방향지시등 보너스" to "+${earned.turnSignalBonus}p")
+            add("거리 %.1fkm".format(record.distanceKm) to "+${earned.distance}p")
+            add("예상 시간 ${record.estimatedMinutes}분" to "+${earned.time}p")
+            if (earned.safetyBonus > 0) add("안전 운전 보너스" to "+${earned.safetyBonus}p")
+            if (earned.penalty > 0) add("위험 운전 감점" to "-${earned.penalty}p")
+        }.forEach { (label, value) ->
+            val row = layoutInflater.inflate(R.layout.item_result_row, rows, false)
+            row.findViewById<TextView>(R.id.rowLabel).text = label
+            row.findViewById<TextView>(R.id.rowValue).text = value
+            rows.addView(row)
+        }
         findViewById<Button>(R.id.btnHome).setOnClickListener { showHome() }
     }
 
