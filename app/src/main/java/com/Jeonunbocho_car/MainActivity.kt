@@ -19,6 +19,9 @@ import android.car.Car
 import android.car.drivingstate.CarUxRestrictionsManager
 import android.content.res.ColorStateList
 import android.os.Bundle
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.RelativeSizeSpan
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -33,6 +36,14 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.slider.Slider
 
 private const val SEARCH_TIMEOUT_MS = 15_000L
+
+// 순환 방향 버튼 글자: 방향은 크게, 설명은 작게 두 줄로. 레이아웃 XML의 \n은 그대로 보일 수 있어 코드로 만든다.
+fun directionLabel(clockwise: Boolean): CharSequence {
+    val title = if (clockwise) "시계 방향" else "반시계 방향"
+    val sub = if (clockwise) "오른쪽으로 크게 돌아요" else "왼쪽으로 크게 돌아요"
+    return SpannableStringBuilder(title).append("\n")
+        .append(sub, RelativeSizeSpan(0.8f), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+}
 
 // shortcut: 상황별 연습은 5km 순환 코스 안에서 찾는다. 찾는 비율을 보고 조정한다.
 private const val PRACTICE_SEARCH_KM = 5.0
@@ -445,6 +456,8 @@ class MainActivity : AppCompatActivity() {
         val slider = findViewById<Slider>(R.id.distanceSlider)
         val clockwise = findViewById<MaterialButton>(R.id.btnClockwise)
         val counterClockwise = findViewById<MaterialButton>(R.id.btnCounterClockwise)
+        clockwise.text = directionLabel(clockwise = true)
+        counterClockwise.text = directionLabel(clockwise = false)
 
         // 뒤로 갔다가 다시 와도 고른 값을 유지한다.
         slider.value = loopKm

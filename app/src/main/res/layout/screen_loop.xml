@@ -28,7 +28,7 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="18dp"
         android:layout_weight="1">
 
         <LinearLayout
@@ -59,7 +59,7 @@
                         style="@style/Jb.OnBlock"
                         android:includeFontPadding="false"
                         android:letterSpacing="-0.05"
-                        android:textSize="136sp" />
+                        android:textSize="120sp" />
 
                     <TextView
                         style="@style/Jb.OnBlock"
@@ -72,7 +72,6 @@
                     android:id="@+id/distanceSlider"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:contentDescription="순환 코스 거리"
                     android:stepSize="0.1"
                     android:value="5.0"
@@ -120,20 +119,20 @@
                     android:id="@+id/btnClockwise"
                     style="@style/Jb.Button.Choice"
                     android:layout_width="0dp"
-                    android:layout_height="160dp"
+                    android:layout_height="150dp"
                     android:layout_marginEnd="7dp"
                     android:layout_weight="1"
-                    android:text="시계 방향\n오른쪽으로 크게 돌아요"
+                    android:text="시계 방향"
                     app:icon="@drawable/ic_rotate_cw" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCounterClockwise"
                     style="@style/Jb.Button.Choice"
                     android:layout_width="0dp"
-                    android:layout_height="160dp"
+                    android:layout_height="150dp"
                     android:layout_marginStart="7dp"
                     android:layout_weight="1"
-                    android:text="반시계 방향\n왼쪽으로 크게 돌아요"
+                    android:text="반시계 방향"
                     app:icon="@drawable/ic_rotate_ccw" />
             </LinearLayout>
         </LinearLayout>
