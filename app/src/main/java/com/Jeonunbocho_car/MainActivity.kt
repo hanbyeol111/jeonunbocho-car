@@ -292,11 +292,11 @@ class MainActivity : AppCompatActivity() {
         showIcon(R.id.farIcon, next?.type?.iconRes())
         findViewById<TextView>(R.id.farTitle).apply {
             text = next?.title ?: NO_PRACTICE_AHEAD
-            // 거리(44sp)와 한 줄에 들어가게, 긴 이름(고가도로·지하차도 등)은 줄인다.
+            // 참고 정보라 작게. 거리(32sp)와 한 줄에 들어가게, 긴 이름(고가도로·지하차도 등)은 더 줄인다.
             textSize = when {
-                next == null -> 28f
-                next.title.length > 5 -> 36f
-                else -> 44f
+                next == null -> 24f
+                next.title.length > 5 -> 28f
+                else -> 32f
             }
         }
         findViewById<TextView>(R.id.farDistance).text = next?.distance ?: ""

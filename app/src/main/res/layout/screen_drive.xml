@@ -31,12 +31,12 @@
                 android:id="@+id/nowCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="14dp"
+                android:layout_marginBottom="10dp"
                 android:background="@drawable/bg_block"
                 android:backgroundTint="@color/jb_sky"
                 android:orientation="vertical"
                 android:paddingHorizontal="28dp"
-                android:paddingVertical="20dp"
+                android:paddingVertical="16dp"
                 android:visibility="gone">
 
                 <TextView
@@ -117,37 +117,39 @@
                     android:backgroundTint="@color/jb_on_block"
                     android:orientation="vertical"
                     android:paddingHorizontal="20dp"
-                    android:paddingVertical="12dp"
+                    android:paddingVertical="16dp"
                     android:visibility="gone">
 
-                    <LinearLayout
+                    <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:text="바로 이어서"
+                        android:textColor="@color/jb_lime"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="바로 이어서 · "
-                            android:textColor="@color/jb_lime"
-                            android:textSize="22sp"
-                            android:textStyle="bold" />
-
                         <ImageView
                             android:id="@+id/followIcon"
-                            android:layout_width="30dp"
-                            android:layout_height="30dp"
-                            android:layout_marginEnd="6dp"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:layout_marginEnd="10dp"
                             android:importantForAccessibility="no"
                             app:tint="@color/white" />
 
                         <TextView
                             android:id="@+id/followTurn"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:textColor="@color/white"
-                            android:textSize="24sp"
+                            android:textSize="34sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
@@ -155,12 +157,14 @@
                         android:id="@+id/followAdvice"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
                         android:textColor="@color/white"
-                        android:textSize="22sp" />
+                        android:textSize="28sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- 멀 때 둘째: 다음 연습 상황 (세로 약 132dp) -->
+            <!-- 멀 때 둘째: 다음 연습 상황. 참고 정보라 작게 둔다 (세로 약 100dp) -->
             <LinearLayout
                 android:id="@+id/practiceFar"
                 android:layout_width="match_parent"
@@ -168,15 +172,15 @@
                 android:background="@drawable/bg_block"
                 android:backgroundTint="@color/jb_ink"
                 android:orientation="vertical"
-                android:paddingHorizontal="28dp"
-                android:paddingVertical="20dp">
+                android:paddingHorizontal="24dp"
+                android:paddingVertical="14dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="다음 연습"
                     android:textColor="@color/jb_on_ink_secondary"
-                    android:textSize="22sp" />
+                    android:textSize="20sp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -187,8 +191,8 @@
 
                     <ImageView
                         android:id="@+id/farIcon"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
                         android:layout_marginEnd="10dp"
                         android:importantForAccessibility="no"
                         android:visibility="gone"
@@ -210,7 +214,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
                         android:textColor="@color/jb_on_ink"
-                        android:textSize="44sp"
+                        android:textSize="32sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
@@ -309,7 +313,7 @@
         android:backgroundTint="@color/jb_surface"
         android:orientation="vertical"
         android:paddingHorizontal="24dp"
-        android:paddingVertical="20dp">
+        android:paddingVertical="14dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -318,7 +322,8 @@
 
             <TextView
                 style="@style/Jb.Label"
-                android:text="코스 진행" />
+                android:text="코스 진행"
+                android:textSize="20sp" />
 
             <TextView
                 android:id="@+id/progressText"
@@ -329,7 +334,7 @@
                 android:gravity="end"
                 android:maxLines="1"
                 android:text="경로 정보를 기다리는 중"
-                android:textSize="22sp"
+                android:textSize="20sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -337,12 +342,12 @@
             android:id="@+id/courseProgress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="10dp"
             android:max="100"
             app:indicatorColor="@color/jb_primary"
             app:trackColor="@color/jb_background"
-            app:trackCornerRadius="6dp"
-            app:trackThickness="12dp" />
+            app:trackCornerRadius="4dp"
+            app:trackThickness="8dp" />
     </LinearLayout>
 
     <Button
