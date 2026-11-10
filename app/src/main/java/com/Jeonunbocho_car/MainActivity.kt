@@ -4,6 +4,10 @@ import ai.pleos.playground.navi.constants.NaviErrorCode
 import ai.pleos.playground.navi.constants.RouteOption
 import ai.pleos.playground.navi.constants.WaypointIndex
 import ai.pleos.playground.navi.data.CurrentLocationInfo
+import ai.pleos.playground.navi.data.DestinationArrivedInfo
+import ai.pleos.playground.vehicle.Vehicle
+import ai.pleos.playground.vehicle.constant.area.TurnSignalValue
+import ai.pleos.playground.vehicle.listener.TurnSignalStateListener
 import ai.pleos.playground.navi.data.RequestWaypointInfo
 import ai.pleos.playground.navi.data.RouteInfo
 import ai.pleos.playground.navi.data.RouteStartInfo
@@ -11,12 +15,15 @@ import ai.pleos.playground.navi.data.RouteWithWaypointsRequest
 import ai.pleos.playground.navi.data.TBTInfo
 import ai.pleos.playground.navi.helper.NaviHelper
 import ai.pleos.playground.navi.helper.listener.NaviHelperEventListener
+import android.car.Car
+import android.car.drivingstate.CarUxRestrictionsManager
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -47,6 +54,31 @@ class MainActivity : AppCompatActivity() {
     private var routeStart: RouteStartInfo? = null
     private val searchTimeout = Runnable { searchStepFailed() }
 
+    // 주행 기록. 주행 화면에 있는 동안만 있다. UI 스레드에서만 바꾼다.
+    private var session: DriveSession? = null
+    private var vehicle: Vehicle? = null
+
+    // 주행 규제(CarUxRestrictions). 주행 중이면 설정 화면을 막는다.
+    private var car: Car? = null
+    private var uxManager: CarUxRestrictionsManager? = null
+    private var setupBlocked = false
+    private val uxListener = CarUxRestrictionsManager.OnUxRestrictionsChangedListener { r ->
+        Log.d("JbUx", "주행 규제 DO=${r.isRequiresDistractionOptimization} active=${r.activeRestrictions}")
+        runOnUiThread {
+            setupBlocked = blocksSetup(r.isRequiresDistractionOptimization, r.activeRestrictions)
+            updateDrivingBlock()
+        }
+    }
+    private val turnSignalListener = object : TurnSignalStateListener {
+        override fun onTurnSignalStateUpdated(state: TurnSignalValue?) {
+            runOnUiThread { session?.onTurnSignal(state == TurnSignalValue.LEFT || state == TurnSignalValue.RIGHT) }
+        }
+
+        override fun onFailed(e: Exception) {
+            Log.d("JbDrive", "방향지시등 신호 실패", e)
+        }
+    }
+
     // 전운보초는 소리를 내지 않고, 주행 화면 문구만 바꾼다.
     private val naviListener = object : NaviHelperEventListener {
         override fun onTBTInfo(tbtInfoList: List<TBTInfo>) {
@@ -54,9 +86,23 @@ class MainActivity : AppCompatActivity() {
             Log.d("JbTBT", "목록 ${tbtInfoList.size}개")
             tbtInfoList.forEach { Log.d("JbTBT", "${it.type} ${it.distance}m ${it.description}") }
             runOnUiThread {
-                if (awaitingRoute && routeStart != null) checkCandidate(tbtInfoList)
-                else showDriveGuidance(nextPractice(tbtInfoList), nextLanePrep(tbtInfoList))
+                if (awaitingRoute && routeStart != null) {
+                    checkCandidate(tbtInfoList)
+                } else {
+                    session?.onTbt(tbtInfoList)
+                    showDriveGuidance(nextPractice(tbtInfoList), nextLanePrep(tbtInfoList))
+                }
             }
+        }
+
+        override fun onDestinationArrived(destinationArrivedInfo: DestinationArrivedInfo) {
+            Log.d("JbDrive", "도착 $destinationArrivedInfo")
+            runOnUiThread { finishDrive(arrived = true) }
+        }
+
+        override fun onReRouteEnded() {
+            Log.d("JbDrive", "재탐색")
+            runOnUiThread { session?.onReRoute() }
         }
 
         override fun onCurrentLocationInfo(currentLocationInfo: CurrentLocationInfo) {
@@ -93,7 +139,7 @@ class MainActivity : AppCompatActivity() {
         required: List<PracticeElement>,
         option: RouteOption,
     ) {
-        setContentView(R.layout.screen_searching)
+        showSetupScreen(R.layout.screen_searching)
         findViewById<Button>(R.id.btnBack).setOnClickListener { cancelSearch() }
         findViewById<TextView>(R.id.searchTitle).text = title
         if (!naviConnected) {
@@ -199,30 +245,43 @@ class MainActivity : AppCompatActivity() {
         showHome()
     }
 
-    // 연습 상황은 멀면 이름과 거리만, 가까우면 큰 거리와 할 일 코칭으로 보여준다.
+    // 멀 때: 지금 할 일(다음 회전과 차선 준비) → 다음 연습.
+    // 가까울 때: 두 카드 대신 연습 상황 코칭 카드. 코스 진행은 두 상태 모두 아래에 있다.
     private fun showDriveGuidance(next: NextPractice?, prep: LanePrep?) {
         val far = findViewById<View?>(R.id.practiceFar) ?: return
         val near = next?.isNear == true
         far.visibility = if (near) View.GONE else View.VISIBLE
-        findViewById<View>(R.id.driveCourse).visibility = if (near) View.GONE else View.VISIBLE
         findViewById<View>(R.id.practiceCard).visibility = if (near) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.nowCard).visibility = if (!near && prep != null) View.VISIBLE else View.GONE
+        showCourseProgress()
+
+        if (!near && prep != null) {
+            val (number, unit) = splitUnit(prep.distance)
+            findViewById<TextView>(R.id.nowDistance).text = number
+            findViewById<TextView>(R.id.nowUnit).text = unit
+            findViewById<TextView>(R.id.nowTurn).text = prep.turn
+            findViewById<TextView>(R.id.nowAdvice).text = prep.advice
+        }
+
         findViewById<TextView>(R.id.farTitle).apply {
             text = next?.title ?: NO_PRACTICE_AHEAD
-            // 긴 이름(고속도로 진입 등)도 거리와 한 줄에 들어가게 줄인다.
+            // 거리(44sp)와 한 줄에 들어가게, 긴 이름(고가도로·지하차도 등)은 줄인다.
             textSize = when {
                 next == null -> 28f
-                next.title.length > 5 -> 40f
-                else -> 60f
+                next.title.length > 5 -> 36f
+                else -> 44f
             }
         }
         findViewById<TextView>(R.id.farDistance).text = next?.distance ?: ""
+        findViewById<View>(R.id.farHint).visibility = if (next != null) View.VISIBLE else View.GONE
+
         if (near) {
             val (number, unit) = splitUnit(next!!.distance)
             findViewById<TextView>(R.id.nextDistance).text = number
             findViewById<TextView>(R.id.nextUnit).text = unit
             findViewById<TextView>(R.id.nextPoint).apply {
                 text = next.title
-                textSize = if (next.title.length > 5) 48f else 60f
+                textSize = if (next.title.length > 6) 44f else 56f
             }
             val rows = findViewById<LinearLayout>(R.id.coachRows)
             rows.removeAllViews()
@@ -233,14 +292,14 @@ class MainActivity : AppCompatActivity() {
                 rows.addView(row)
             }
         }
+    }
 
-        // 가까운 연습 상황과 같은 지점이면 코칭 카드에 이미 나오므로 차선 준비는 숨긴다.
-        val showPrep = prep != null && !(near && prep.index == next!!.index)
-        findViewById<View>(R.id.lanePrepCard).visibility = if (showPrep) View.VISIBLE else View.GONE
-        if (showPrep) {
-            findViewById<TextView>(R.id.lanePrepTurn).text = "${prep!!.distance} 앞 ${prep.turn}"
-            findViewById<TextView>(R.id.lanePrepAdvice).text = prep.advice
-        }
+    private fun showCourseProgress() {
+        val s = session ?: return
+        val left = s.practicesLeft ?: return
+        findViewById<TextView>(R.id.progressText).text =
+            "남은 연습 ${left}곳 · %.1fkm 남음".format(s.remainingKm ?: 0.0)
+        findViewById<LinearProgressIndicator>(R.id.courseProgress).progress = s.progressPercent ?: 0
     }
 
     // 시안(600×800) 비율 그대로 보이게, 창이 시안보다 크면 화면 전체를 같은 비율로 키운다.
@@ -275,7 +334,41 @@ class MainActivity : AppCompatActivity() {
             },
             onFailed = { e -> runOnUiThread { updateNaviStatus("내비 연결 실패: ${e.message}") } }
         )
+        // 방향지시등 기록용. 차량 서비스가 없는 환경에서도 앱은 계속 동작하게 한다.
+        try {
+            vehicle = Vehicle(applicationContext).also {
+                it.initialize()
+                it.getTurnSignal().registerTurnSignalState(turnSignalListener)
+            }
+        } catch (e: Exception) {
+            Log.d("JbDrive", "차량 연결 실패", e)
+            vehicle = null
+        }
+        // 주행 규제. 차량용이 아닌 기기에는 android.car가 없을 수 있어 실패해도 앱은 계속 동작한다.
+        try {
+            car = Car.createCar(this)
+            uxManager = (car?.getCarManager(Car.CAR_UX_RESTRICTION_SERVICE) as? CarUxRestrictionsManager)?.also {
+                it.registerListener(uxListener)
+                uxListener.onUxRestrictionsChanged(it.currentCarUxRestrictions)
+            }
+        } catch (e: Throwable) {
+            Log.d("JbUx", "주행 규제 연결 실패", e)
+        }
         showHome()
+    }
+
+    // 설정 화면(코스 고르기·출발)은 위에 '주행 중' 판을 함께 깔고, 규제 상태에 따라 보이거나 숨긴다.
+    private fun showSetupScreen(layout: Int) {
+        setContentView(layout)
+        addContentView(
+            layoutInflater.inflate(R.layout.view_driving_block, null),
+            ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
+        )
+        updateDrivingBlock()
+    }
+
+    private fun updateDrivingBlock() {
+        findViewById<View?>(R.id.drivingBlock)?.visibility = if (setupBlocked) View.VISIBLE else View.GONE
     }
 
     // 다른 화면을 보는 중이면 화면을 바꾸지 않고 값만 저장한다.
@@ -335,7 +428,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showHome() {
-        setContentView(R.layout.screen_home)
+        showSetupScreen(R.layout.screen_home)
         updateNaviStatus(naviStatus)
         showLevelCard { "다음 레벨까지 ${it}p" }
         findViewById<TextView>(R.id.levelCourseBadge).text = "Lv.${progress.level} 추천"
@@ -347,7 +440,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showLoop() {
-        setContentView(R.layout.screen_loop)
+        showSetupScreen(R.layout.screen_loop)
         val distanceText = findViewById<TextView>(R.id.distanceText)
         val slider = findViewById<Slider>(R.id.distanceSlider)
         val clockwise = findViewById<MaterialButton>(R.id.btnClockwise)
@@ -381,7 +474,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showElement() {
-        setContentView(R.layout.screen_element)
+        showSetupScreen(R.layout.screen_element)
         findViewById<TextView>(R.id.elementHint).text = "골라서 통과하면 포인트를 받아요"
         val list = findViewById<LinearLayout>(R.id.screenContent)
         // 포인트가 낮은 것부터 두 개씩 하늘·민트·라임·버터
@@ -409,7 +502,7 @@ class MainActivity : AppCompatActivity() {
 
     // selected: 코스를 만들 레벨. 지난 레벨을 골라 다시 연습할 수 있다.
     private fun showLevel(selected: Int = progress.level, showAll: Boolean = false) {
-        setContentView(R.layout.screen_level)
+        showSetupScreen(R.layout.screen_level)
         val current = progress.level
         val course = courseForLevel(selected)
         val best = course.bestCase
@@ -426,7 +519,6 @@ class MainActivity : AppCompatActivity() {
         addRows(findViewById(R.id.pointRows), buildList {
             add("거리 ${course.distanceKm}km" to "+${best.distance}p")
             course.elements.forEach { add("${it.label} 통과" to "+${it.points}p") }
-            add("안전 운전 보너스" to "최대 +${best.safetyBonus}p")
             add("예상 시간" to "경로를 만든 뒤")
         }, onBlock = true)
 
@@ -484,7 +576,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showDestination() {
-        setContentView(R.layout.screen_destination)
+        showSetupScreen(R.layout.screen_destination)
         setupBackAndNext { "목적지 안내" }
     }
 
@@ -495,9 +587,9 @@ class MainActivity : AppCompatActivity() {
 
     // route: 길 찾기로 기본 내비에 걸어 둔 순환 경로의 요약. 있으면 뒤로 갈 때 경로를 취소한다.
     private fun showConfirm(title: String, route: RouteSummary? = null) {
-        setContentView(R.layout.screen_confirm)
+        showSetupScreen(R.layout.screen_confirm)
         findViewById<TextView>(R.id.courseInfo).text = title
-        findViewById<Button>(R.id.btnStart).setOnClickListener { showDrive(title) }
+        findViewById<Button>(R.id.btnStart).setOnClickListener { showDrive(title, route) }
         findViewById<Button>(R.id.btnBack).setOnClickListener {
             if (route != null) naviHelper.cancelRoute()
             showHome()
@@ -534,47 +626,71 @@ class MainActivity : AppCompatActivity() {
                 val names = route.practiceElements.distinct().joinToString(", ") { it.label }
                 add(names to "+${best.elements}p")
             }
-            add("안전 운전 보너스" to "최대 +${best.safetyBonus}p")
         }, onBlock = true)
     }
 
-    private fun showDrive(courseInfo: String) {
+    // route: 길 찾기로 만든 경로. 목적지 안내처럼 없으면 거리는 첫 회전 목록에서, 예상 시간은 0으로 둔다.
+    private fun showDrive(courseInfo: String, route: RouteSummary?) {
         setContentView(R.layout.screen_drive)
+        session = DriveSession(route?.distanceM?.toDouble(), route?.minutes ?: 0)
         findViewById<TextView>(R.id.driveCourse).text = "연습 중 · $courseInfo"
-        findViewById<TextView>(R.id.nearCourse).text = "연습 중 · $courseInfo"
         if (naviConnected) naviHelper.getTBTInfo()
-        // 도착 감지(onDestinationArrived)를 연결하면 임시 버튼과 함께 지운다.
-        findViewById<Button>(R.id.btnArrive).setOnClickListener { showResult() }
+        // 도착 신호(onDestinationArrived)가 오지 않을 때를 위해 직접 끝내는 버튼을 둔다.
+        findViewById<Button>(R.id.btnArrive).setOnClickListener {
+            naviHelper.cancelRoute()
+            finishDrive(arrived = false)
+        }
     }
 
-    private fun showResult() {
-        setContentView(R.layout.screen_result)
-        // shortcut: 실제 주행 기록이 없어 예시 값을 쓴다. 경로·차량 데이터를 연결하면 교체한다.
-        val record = DriveRecord(
-            distanceKm = 10.0,
-            estimatedMinutes = 30,
-            elements = listOf(PassedElement(PracticeElement.U_TURN, turnSignalOn = true)),
-        )
-        val earned = calculatePoints(record)
-        progress = progress.add(earned.total)
-        saveProgress()
+    private fun finishDrive(arrived: Boolean) {
+        val s = session ?: return
+        session = null
+        Log.d("JbDrive", "주행 끝 arrived=$arrived 통과=${s.passedElements} 달린 거리=${s.drivenKm}km")
+        showResult(s.record(arrived), arrived)
+    }
 
-        findViewById<TextView>(R.id.earnedPoints).text = "%+dp".format(earned.total)
+    // 도중에 끝내면 포인트 없이 기록만 보여준다.
+    private fun showResult(record: DriveRecord, arrived: Boolean) {
+        setContentView(R.layout.screen_result)
+        val earned = calculatePoints(record)
+        if (arrived) {
+            progress = progress.add(earned.total)
+            saveProgress()
+        } else {
+            findViewById<TextView>(R.id.resultTitle).text = "주행을 끝냈어요"
+            findViewById<TextView>(R.id.earnedLabel).text = "끝까지 달리면 포인트를 받아요"
+        }
+
+        findViewById<TextView>(R.id.earnedPoints).text = if (arrived) "%+dp".format(earned.total) else "0p"
         val required = progress.required
         findViewById<TextView>(R.id.resultLevel).text = "지금 Lv.${progress.level}"
         findViewById<TextView>(R.id.resultPoints).text = required?.let { "${progress.points} / ${it}p" } ?: "MAX"
         findViewById<LinearProgressIndicator>(R.id.resultProgress).progress =
             required?.let { progress.points * 100 / it } ?: 100
         addRows(findViewById(R.id.resultRows), buildList {
-            record.elements.filterNot { it.rerouted }.forEach {
-                val signal = if (it.turnSignalOn) "방향지시등 켬" else "방향지시등 안 켬"
-                add("${it.element.label} · $signal" to "+${it.element.points}p")
+            record.elements.forEach {
+                val label = when {
+                    it.rerouted -> "${it.element.label} · 재탐색"
+                    it.turnSignalOn -> "${it.element.label} · 방향지시등 켬"
+                    else -> "${it.element.label} · 방향지시등 안 켬"
+                }
+                val value = when {
+                    !arrived -> "통과"
+                    it.rerouted -> "0p"
+                    else -> "+${it.element.points}p"
+                }
+                add(label to value)
+            }
+            if (record.elements.isEmpty()) add("통과한 연습 상황" to "없음")
+            if (!arrived) {
+                add("달린 거리" to "%.1fkm".format(record.distanceKm))
+                return@buildList
             }
             if (earned.turnSignalBonus > 0) add("방향지시등 보너스" to "+${earned.turnSignalBonus}p")
             add("거리 %.1fkm".format(record.distanceKm) to "+${earned.distance}p")
             add("예상 시간 ${record.estimatedMinutes}분" to "+${earned.time}p")
             if (earned.safetyBonus > 0) add("안전 운전 보너스" to "+${earned.safetyBonus}p")
-            if (earned.penalty > 0) add("위험 운전 감점" to "-${earned.penalty}p")
+            if (earned.penalty > 0) add("방향지시등 안 켬 감점" to "-${earned.penalty}p")
         }, onBlock = false)
         findViewById<Button>(R.id.btnHome).setOnClickListener { showHome() }
     }
@@ -583,6 +699,12 @@ class MainActivity : AppCompatActivity() {
         handler.removeCallbacks(searchTimeout)
         naviHelper.removeListener(naviListener)
         naviHelper.release()
+        vehicle?.let {
+            it.getTurnSignal().unregisterTurnSignalState(turnSignalListener)
+            it.release()
+        }
+        uxManager?.unregisterListener()
+        car?.disconnect()
         super.onDestroy()
     }
 }

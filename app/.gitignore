@@ -1,1 +1,3 @@
 /build
+# 서명된 APK 기본 출력 폴더. 제출용 APK는 apk/에 복사해서 올린다.
+/release

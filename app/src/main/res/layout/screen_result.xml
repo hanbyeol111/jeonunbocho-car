@@ -7,6 +7,7 @@
     android:padding="32dp">
 
     <TextView
+        android:id="@+id/resultTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="완주했어요"
@@ -24,6 +25,7 @@
         android:paddingVertical="26dp">
 
         <TextView
+            android:id="@+id/earnedLabel"
             style="@style/Jb.OnBlock"
             android:text="이번에 얻은 포인트" />
 

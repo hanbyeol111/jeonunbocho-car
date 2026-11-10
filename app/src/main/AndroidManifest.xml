@@ -22,9 +22,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Jeonunbochocar">
 
+        <uses-library
+            android:name="android.car"
+            android:required="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
+            <!-- DO 선언: 주행 중에도 앱을 쓸 수 있다. 대신 설정 화면은 CarUxRestrictions에 따라 직접 막는다. -->
+            <meta-data
+                android:name="distractionOptimized"
+                android:value="true" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

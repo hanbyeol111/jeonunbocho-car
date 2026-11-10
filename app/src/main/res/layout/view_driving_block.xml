@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 주행 중 설정 화면 위에 덮는 판. 아래 화면을 누르지 못하게 터치를 받는다. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/drivingBlock"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/jb_background"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="32dp"
+    android:visibility="gone">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_block"
+        android:backgroundTint="@color/jb_butter"
+        android:orientation="vertical"
+        android:padding="32dp">
+
+        <TextView
+            style="@style/Jb.OnBlock"
+            android:text="주행 중이에요"
+            android:textSize="40sp" />
+
+        <TextView
+            style="@style/Jb.OnBlock"
+            android:layout_marginTop="12dp"
+            android:text="코스는 차를 세운 뒤 고를 수 있어요"
+            android:textSize="28sp" />
+
+        <TextView
+            style="@style/Jb.OnBlock"
+            android:layout_marginTop="8dp"
+            android:text="정차하면 이 화면이 저절로 사라져요"
+            android:textColor="@color/jb_on_block_secondary"
+            android:textStyle="normal" />
+    </LinearLayout>
+</LinearLayout>

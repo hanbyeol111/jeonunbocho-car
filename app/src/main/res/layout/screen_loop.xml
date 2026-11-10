@@ -123,7 +123,7 @@
                     android:layout_height="160dp"
                     android:layout_marginEnd="7dp"
                     android:layout_weight="1"
-                    android:text="시계 방향\n우회전 위주"
+                    android:text="시계 방향\n오른쪽으로 크게 돌아요"
                     app:icon="@drawable/ic_rotate_cw" />
 
                 <com.google.android.material.button.MaterialButton
@@ -133,7 +133,7 @@
                     android:layout_height="160dp"
                     android:layout_marginStart="7dp"
                     android:layout_weight="1"
-                    android:text="반시계 방향\n좌회전 위주"
+                    android:text="반시계 방향\n왼쪽으로 크게 돌아요"
                     app:icon="@drawable/ic_rotate_ccw" />
             </LinearLayout>
         </LinearLayout>

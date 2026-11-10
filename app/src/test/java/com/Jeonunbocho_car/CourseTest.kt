@@ -56,23 +56,23 @@ class CourseTest {
     }
 
     @Test
-    fun bestCaseAddsDistanceSituationSignalAndSafety() {
-        // Lv.4: 거리 10 + 급회전 12 + 방향지시등 3 + 안전 보너스 10
+    fun bestCaseAddsDistanceSituationAndSignal() {
+        // Lv.4: 거리 10 + 급회전 12 + 방향지시등 3 (속도를 재지 않아 안전 보너스 없음)
         val best = courseForLevel(4).bestCase
         assertEquals(10, best.distance)
         assertEquals(12, best.elements)
         assertEquals(3, best.turnSignalBonus)
-        assertEquals(10, best.safetyBonus)
-        assertEquals(35, best.total)
-        // Lv.1은 상황이 없어 거리 3 + 안전 보너스 10
-        assertEquals(13, courseForLevel(1).bestCase.total)
+        assertEquals(0, best.safetyBonus)
+        assertEquals(25, best.total)
+        // Lv.1은 상황이 없어 거리 3
+        assertEquals(3, courseForLevel(1).bestCase.total)
     }
 
     @Test
     fun runsRoundUp() {
-        assertEquals(4, courseForLevel(4).runsFor(140))
-        assertEquals(1, courseForLevel(4).runsFor(35))
-        assertEquals(2, courseForLevel(4).runsFor(36))
+        assertEquals(4, courseForLevel(4).runsFor(100))
+        assertEquals(1, courseForLevel(4).runsFor(25))
+        assertEquals(2, courseForLevel(4).runsFor(26))
     }
 
     @Test

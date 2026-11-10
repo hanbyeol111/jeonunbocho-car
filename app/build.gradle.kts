@@ -7,6 +7,8 @@ android {
     compileSdk {
         version = release(37)
     }
+    // 주행 규제(CarUxRestrictionsManager)용 AAOS 라이브러리
+    useLibrary("android.car")
 
     defaultConfig {
         applicationId = "com.Jeonunbocho_car"

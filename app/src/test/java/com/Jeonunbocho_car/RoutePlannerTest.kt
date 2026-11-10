@@ -93,12 +93,12 @@ class RoutePlannerTest {
         assertEquals(listOf("회전교차로" to 2, "터널" to 1), s.situations)
         assertEquals("좌회전", s.firstPrep?.turn)
         assertEquals(18, s.minutes)
-        // 거리 6 + 시간 18분/5 = 3 + 회전교차로 14×2 + 유턴 15 + 터널 10 + 방향지시등 3×4 + 안전 10
+        // 거리 6 + 시간 18분/5 = 3 + 회전교차로 14×2 + 유턴 15 + 터널 10 + 방향지시등 3×4 (안전 보너스는 속도를 재지 않아 0)
         assertEquals(6, s.bestPoints.distance)
         assertEquals(3, s.bestPoints.time)
         assertEquals(53, s.bestPoints.elements)
         assertEquals(12, s.bestPoints.turnSignalBonus)
-        assertEquals(10, s.bestPoints.safetyBonus)
+        assertEquals(0, s.bestPoints.safetyBonus)
     }
 
     @Test

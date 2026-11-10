@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 크기는 시안 C 캔버스(600×800dp) 기준. 창이 더 크면 MainActivity가 같은 비율로 키운다.
+     세로 예산: 736dp = 머리줄 + 카드 영역(스크롤) + 코스 진행 + 주행 끝내기 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -8,129 +11,222 @@
     <TextView
         android:id="@+id/driveCourse"
         style="@style/Jb.Label"
+        android:maxLines="1"
+        android:ellipsize="end"
         android:text="연습 중" />
 
-    <!-- 연습 상황이 멀 때: 다음 연습과 거리만 -->
-    <LinearLayout
-        android:id="@+id/practiceFar"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginTop="14dp"
-        android:background="@drawable/bg_block"
-        android:backgroundTint="@color/jb_ink"
-        android:orientation="vertical"
-        android:paddingHorizontal="28dp"
-        android:paddingVertical="26dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="다음 연습"
-            android:textColor="@color/jb_on_ink_secondary"
-            android:textSize="22sp" />
+        android:layout_weight="1">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:orientation="vertical">
+
+            <!-- 멀 때 맨 위: 지금 할 일 = 다음 회전과 차선 준비 -->
+            <LinearLayout
+                android:id="@+id/nowCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:background="@drawable/bg_block"
+                android:backgroundTint="@color/jb_sky"
+                android:orientation="vertical"
+                android:paddingHorizontal="28dp"
+                android:paddingVertical="20dp"
+                android:visibility="gone">
+
+                <TextView
+                    style="@style/Jb.OnBlock"
+                    android:text="지금 할 일" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/nowDistance"
+                        style="@style/Jb.OnBlock"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.05"
+                        android:textSize="88sp" />
+
+                    <TextView
+                        android:id="@+id/nowUnit"
+                        style="@style/Jb.OnBlock"
+                        android:layout_marginStart="6dp"
+                        android:textSize="36sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/nowTurn"
+                    style="@style/Jb.OnBlock"
+                    android:textSize="44sp" />
+
+                <TextView
+                    android:id="@+id/nowAdvice"
+                    style="@style/Jb.OnBlock"
+                    android:layout_width="match_parent"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_tag"
+                    android:gravity="center_vertical"
+                    android:minHeight="60dp"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="10dp"
+                    android:textSize="24sp" />
+            </LinearLayout>
+
+            <!-- 멀 때 둘째: 다음 연습 상황 -->
+            <LinearLayout
+                android:id="@+id/practiceFar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_block"
+                android:backgroundTint="@color/jb_ink"
+                android:orientation="vertical"
+                android:paddingHorizontal="28dp"
+                android:paddingVertical="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="다음 연습"
+                    android:textColor="@color/jb_on_ink_secondary"
+                    android:textSize="22sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/farTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="안내를 기다리는 중"
+                        android:textColor="@color/jb_lime"
+                        android:textSize="28sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/farDistance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:textColor="@color/jb_on_ink"
+                        android:textSize="44sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/farHint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="가까워지면 할 일을 알려줘요"
+                    android:textColor="@color/jb_on_ink_secondary"
+                    android:textSize="22sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- 가까울 때: 지금 할 일 = 연습 상황 코칭 (위 두 카드 대신) -->
+            <LinearLayout
+                android:id="@+id/practiceCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_block"
+                android:backgroundTint="@color/jb_lime"
+                android:orientation="vertical"
+                android:padding="28dp"
+                android:visibility="gone">
+
+                <TextView
+                    style="@style/Jb.OnBlock"
+                    android:text="지금 할 일 · 연습 상황" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/nextDistance"
+                        style="@style/Jb.OnBlock"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.06"
+                        android:textSize="128sp" />
+
+                    <TextView
+                        android:id="@+id/nextUnit"
+                        style="@style/Jb.OnBlock"
+                        android:layout_marginStart="8dp"
+                        android:textSize="48sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/nextPoint"
+                    style="@style/Jb.OnBlock"
+                    android:layout_marginBottom="12dp"
+                    android:textSize="56sp" />
+
+                <LinearLayout
+                    android:id="@+id/coachRows"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- 코스 진행: 두 상태 모두 아래에 고정 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/bg_block"
+        android:backgroundTint="@color/jb_surface"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/farTitle"
+                style="@style/Jb.Label"
+                android:text="코스 진행" />
+
+            <TextView
+                android:id="@+id/progressText"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="안내를 기다리는 중"
-                android:textColor="@color/jb_lime"
-                android:textSize="28sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/farDistance"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:textColor="@color/jb_on_ink"
-                android:textSize="60sp"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:maxLines="1"
+                android:text="경로 정보를 기다리는 중"
+                android:textSize="22sp"
                 android:textStyle="bold" />
         </LinearLayout>
-    </LinearLayout>
 
-    <!-- 연습 상황이 가까울 때: 큰 거리와 할 일 코칭 -->
-    <LinearLayout
-        android:id="@+id/practiceCard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_block"
-        android:backgroundTint="@color/jb_lime"
-        android:orientation="vertical"
-        android:padding="28dp"
-        android:visibility="gone">
-
-        <TextView
-            android:id="@+id/nearCourse"
-            style="@style/Jb.OnBlock" />
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/nextDistance"
-                style="@style/Jb.OnBlock"
-                android:includeFontPadding="false"
-                android:letterSpacing="-0.06"
-                android:textSize="200sp" />
-
-            <TextView
-                android:id="@+id/nextUnit"
-                style="@style/Jb.OnBlock"
-                android:layout_marginStart="8dp"
-                android:textSize="64sp" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/nextPoint"
-            style="@style/Jb.OnBlock"
-            android:layout_marginBottom="12dp"
-            android:textSize="60sp" />
-
-        <LinearLayout
-            android:id="@+id/coachRows"
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/courseProgress"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
-    </LinearLayout>
-
-    <Space style="@style/Jb.Fill" />
-
-    <LinearLayout
-        android:id="@+id/lanePrepCard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:background="@drawable/bg_block"
-        android:backgroundTint="@color/jb_sky"
-        android:orientation="vertical"
-        android:paddingHorizontal="28dp"
-        android:paddingVertical="24dp"
-        android:visibility="gone">
-
-        <TextView
-            style="@style/Jb.OnBlock"
-            android:text="차선 준비" />
-
-        <TextView
-            android:id="@+id/lanePrepTurn"
-            style="@style/Jb.OnBlock"
-            android:layout_marginTop="6dp"
-            android:textSize="36sp" />
-
-        <TextView
-            android:id="@+id/lanePrepAdvice"
-            style="@style/Jb.OnBlock"
-            android:textSize="24sp" />
+            android:layout_marginTop="12dp"
+            android:max="100"
+            app:indicatorColor="@color/jb_primary"
+            app:trackColor="@color/jb_background"
+            app:trackCornerRadius="6dp"
+            app:trackThickness="12dp" />
     </LinearLayout>
 
     <Button
@@ -138,6 +234,6 @@
         android:layout_width="match_parent"
         android:layout_height="72dp"
         android:layout_marginTop="14dp"
-        android:text="도착 (임시)"
+        android:text="주행 끝내기"
         android:textColor="@color/jb_text_secondary" />
 </LinearLayout>

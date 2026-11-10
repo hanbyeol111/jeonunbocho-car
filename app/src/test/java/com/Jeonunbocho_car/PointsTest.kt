@@ -13,6 +13,7 @@ class PointsTest {
             distanceKm = 10.0,
             estimatedMinutes = 30,
             elements = listOf(PassedElement(PracticeElement.U_TURN, turnSignalOn = true)),
+            safetyMeasured = true,
         )
 
         val earned = calculatePoints(record)
@@ -88,10 +89,15 @@ class PointsTest {
     @Test
     fun safetyBonusNeedsNoSpeedingAndNoHardBrake() {
         val earned = calculatePoints(
-            DriveRecord(0.0, 0, emptyList(), speedingCount = 1, cautionPassedCount = 2)
+            DriveRecord(0.0, 0, emptyList(), speedingCount = 1, cautionPassedCount = 2, safetyMeasured = true)
         )
 
         assertEquals(9, earned.safetyBonus)
+    }
+
+    @Test
+    fun noSafetyBonusWhenSpeedWasNotMeasured() {
+        assertEquals(0, calculatePoints(DriveRecord(5.0, 10, emptyList())).safetyBonus)
     }
 
     @Test

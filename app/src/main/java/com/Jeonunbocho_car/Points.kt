@@ -33,6 +33,8 @@ data class DriveRecord(
     val hardTurnCount: Int = 0,
     val hardUTurnCount: Int = 0,
     val laneChangeNoSignalCount: Int = 0,
+    // 속도를 재지 않은 주행은 과속·급감속 0회가 '안 쟀다'는 뜻이라 안전 보너스를 주지 않는다.
+    val safetyMeasured: Boolean = false,
 )
 
 data class EarnedPoints(
@@ -67,7 +69,8 @@ fun calculatePoints(record: DriveRecord): EarnedPoints {
         time = record.estimatedMinutes / MINUTES_PER_POINT,
         elements = passed.sumOf { it.element.points },
         turnSignalBonus = passed.count { it.turnSignalOn } * TURN_SIGNAL_BONUS,
-        safetyBonus = (if (record.speedingCount == 0) NO_SPEEDING_BONUS else 0) +
+        safetyBonus = if (!record.safetyMeasured) 0 else
+            (if (record.speedingCount == 0) NO_SPEEDING_BONUS else 0) +
                 (if (record.hardBrakeCount == 0) NO_HARD_BRAKE_BONUS else 0) +
                 record.cautionPassedCount * CAUTION_PASS_BONUS,
         penalty = record.speedingCount * SPEEDING_PENALTY +
