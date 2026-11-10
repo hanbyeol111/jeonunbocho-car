@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -16,54 +15,38 @@
             android:id="@+id/btnBack"
             style="@style/Jb.Button.Back"
             android:layout_width="wrap_content"
-            android:layout_height="72dp"
+            android:layout_height="64dp"
             android:layout_marginEnd="20dp"
             android:text="뒤로" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="목적지 안내"
-            android:textSize="34sp"
-            android:textStyle="bold" />
+            style="@style/Jb.HeaderTitle"
+            android:text="목적지 안내" />
     </LinearLayout>
 
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:layout_weight="1">
+        android:background="@drawable/bg_block"
+        android:backgroundTint="@color/jb_butter"
+        android:orientation="vertical"
+        android:padding="28dp">
 
-        <LinearLayout
-            android:id="@+id/screenContent"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+        <TextView
+            style="@style/Jb.OnBlock"
+            android:text="즐겨찾기 · 최근 목적지"
+            android:textSize="30sp" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="0dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical"
-                android:padding="24dp">
+        <TextView
+            style="@style/Jb.OnBlock"
+            android:layout_marginTop="6dp"
+            android:text="목록은 준비 중이에요"
+            android:textColor="@color/jb_on_block_secondary"
+            android:textStyle="normal" />
+    </LinearLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="즐겨찾기 · 최근 목적지"
-                    android:textSize="30sp"
-                    android:textStyle="bold" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="목록은 준비 중이에요"
-                    android:textColor="@color/jb_text_secondary"
-                    android:textSize="22sp" />
-            </LinearLayout>
-        </LinearLayout>
-    </ScrollView>
+    <Space style="@style/Jb.Fill" />
 
     <Button
         android:id="@+id/btnNext"

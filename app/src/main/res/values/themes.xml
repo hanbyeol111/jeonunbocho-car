@@ -1,12 +1,16 @@
 <resources>
-    <style name="Theme.Jeonunbochocar" parent="Theme.MaterialComponents.NoActionBar">
-        <item name="colorPrimary">@color/jb_accent</item>
-        <item name="colorPrimaryVariant">@color/jb_navy</item>
-        <item name="colorOnPrimary">@color/jb_background</item>
-        <item name="colorSecondary">@color/jb_accent</item>
-        <item name="colorOnSecondary">@color/jb_background</item>
+    <!-- DayNight: 차가 야간 모드면 values-night 색을 쓴다. -->
+    <style name="Theme.Jeonunbochocar" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/jb_primary</item>
+        <item name="colorPrimaryVariant">@color/jb_primary</item>
+        <item name="colorOnPrimary">@color/jb_on_primary</item>
+        <item name="colorSecondary">@color/jb_primary</item>
+        <item name="colorOnSecondary">@color/jb_on_primary</item>
+        <item name="android:textColorPrimary">@color/jb_text</item>
+        <item name="android:textColorSecondary">@color/jb_text_secondary</item>
         <item name="android:windowBackground">@color/jb_background</item>
         <item name="android:statusBarColor">@color/jb_background</item>
+        <item name="android:windowLightStatusBar">@bool/jb_light_bars</item>
         <item name="materialButtonStyle">@style/Jb.Button</item>
     </style>
 </resources>

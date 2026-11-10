@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="jb_background">#0D0F0E</color>
+    <color name="jb_surface">#1A1D1C</color>
+    <color name="jb_text">#F1F3F2</color>
+    <color name="jb_text_secondary">#A3ABA7</color>
+    <color name="jb_ink">#1A1D1C</color>
+    <color name="jb_on_ink_secondary">#A3ABA7</color>
+    <color name="jb_primary">#F1F3F2</color>
+    <color name="jb_on_primary">#111413</color>
+    <color name="jb_choice_on">#8DF2CD</color>
+    <color name="jb_choice_on_text">#111413</color>
+    <color name="jb_choice_on_icon">#111413</color>
+    <color name="jb_status_ok">#8DF2CD</color>
+</resources>

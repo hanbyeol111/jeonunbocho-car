@@ -15,22 +15,19 @@
             android:id="@+id/btnBack"
             style="@style/Jb.Button.Back"
             android:layout_width="wrap_content"
-            android:layout_height="72dp"
+            android:layout_height="64dp"
             android:layout_marginEnd="20dp"
             android:text="뒤로" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="코스 확인"
-            android:textSize="34sp"
-            android:textStyle="bold" />
+            style="@style/Jb.HeaderTitle"
+            android:text="코스 확인" />
     </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="22dp"
         android:layout_weight="1">
 
         <LinearLayout
@@ -38,56 +35,81 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- 코스 이름과 실제 거리·시간 -->
+            <!-- 이번 연습: 코스 이름과 실제 거리·시간 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_level_card"
+                android:background="@drawable/bg_block"
+                android:backgroundTint="@color/jb_sky"
                 android:orientation="vertical"
-                android:padding="24dp">
+                android:padding="28dp">
+
+                <TextView
+                    style="@style/Jb.OnBlock"
+                    android:text="이번 연습" />
 
                 <TextView
                     android:id="@+id/courseInfo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="30sp"
-                    android:textStyle="bold" />
+                    style="@style/Jb.OnBlock"
+                    android:layout_marginTop="4dp"
+                    android:textSize="40sp" />
 
                 <LinearLayout
                     android:id="@+id/routeLine"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:gravity="bottom"
+                    android:layout_marginTop="20dp"
                     android:orientation="horizontal"
                     android:visibility="gone">
 
-                    <TextView
-                        android:id="@+id/routeDistance"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:textSize="56sp"
-                        android:textStyle="bold" />
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_block"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="20dp"
+                        android:paddingVertical="18dp">
 
-                    <TextView
-                        android:id="@+id/routeTime"
-                        android:layout_width="wrap_content"
+                        <TextView
+                            style="@style/Jb.OnBlock"
+                            android:text="실제 거리"
+                            android:textColor="@color/jb_on_block_secondary" />
+
+                        <TextView
+                            android:id="@+id/routeDistance"
+                            style="@style/Jb.OnBlock"
+                            android:textSize="44sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="16dp"
-                        android:layout_marginBottom="8dp"
-                        android:textColor="@color/jb_on_navy_secondary"
-                        android:textSize="28sp"
-                        android:textStyle="bold" />
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_block"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="20dp"
+                        android:paddingVertical="18dp">
+
+                        <TextView
+                            style="@style/Jb.OnBlock"
+                            android:text="예상 시간"
+                            android:textColor="@color/jb_on_block_secondary" />
+
+                        <TextView
+                            android:id="@+id/routeTime"
+                            style="@style/Jb.OnBlock"
+                            android:textSize="44sp" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <TextView
                     android:id="@+id/routeNote"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    style="@style/Jb.OnBlock"
+                    android:layout_marginTop="16dp"
                     android:text="출발한 곳으로 다시 돌아와요"
-                    android:textColor="@color/jb_on_navy_secondary"
-                    android:textSize="22sp"
                     android:visibility="gone" />
             </LinearLayout>
 
@@ -96,18 +118,16 @@
                 android:id="@+id/summaryCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_card"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_block"
+                android:backgroundTint="@color/jb_surface"
                 android:orientation="vertical"
                 android:padding="24dp"
                 android:visibility="gone">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="이 코스에서 하게 될 것"
-                    android:textColor="@color/jb_text_secondary"
-                    android:textSize="22sp" />
+                    style="@style/Jb.Label"
+                    android:text="이 코스에서 하게 될 것" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -115,45 +135,46 @@
                     android:layout_marginTop="12dp"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/statRight"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_stat"
-                        android:gravity="center"
-                        android:padding="12dp"
-                        android:textSize="22sp" />
+                    <LinearLayout style="@style/Jb.Stat">
 
-                    <TextView
-                        android:id="@+id/statLeft"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginHorizontal="8dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_stat"
-                        android:gravity="center"
-                        android:padding="12dp"
-                        android:textSize="22sp" />
+                        <TextView
+                            android:id="@+id/statRight"
+                            style="@style/Jb.StatValue" />
 
-                    <TextView
-                        android:id="@+id/statUturn"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_stat"
-                        android:gravity="center"
-                        android:padding="12dp"
-                        android:textSize="22sp" />
+                        <TextView
+                            style="@style/Jb.Label"
+                            android:text="우회전" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        style="@style/Jb.Stat"
+                        android:layout_marginHorizontal="12dp">
+
+                        <TextView
+                            android:id="@+id/statLeft"
+                            style="@style/Jb.StatValue" />
+
+                        <TextView
+                            style="@style/Jb.Label"
+                            android:text="좌회전" />
+                    </LinearLayout>
+
+                    <LinearLayout style="@style/Jb.Stat">
+
+                        <TextView
+                            android:id="@+id/statUturn"
+                            style="@style/Jb.StatValue" />
+
+                        <TextView
+                            style="@style/Jb.Label"
+                            android:text="유턴" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    style="@style/Jb.Label"
                     android:layout_marginTop="20dp"
-                    android:text="연습 상황"
-                    android:textColor="@color/jb_text_secondary"
-                    android:textSize="22sp" />
+                    android:text="연습 상황" />
 
                 <TextView
                     android:id="@+id/routeSituations"
@@ -170,12 +191,9 @@
                     android:orientation="vertical">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        style="@style/Jb.Label"
                         android:layout_marginTop="20dp"
-                        android:text="출발하면 먼저"
-                        android:textColor="@color/jb_text_secondary"
-                        android:textSize="22sp" />
+                        android:text="출발하면 먼저" />
 
                     <TextView
                         android:id="@+id/routeFirst"
@@ -189,34 +207,57 @@
                         android:id="@+id/routeFirstAdvice"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/jb_accent_soft"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
+                        android:textSize="22sp" />
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- 받을 수 있는 포인트 -->
+            <!-- 완주하면 받을 수 있는 포인트 -->
             <LinearLayout
                 android:id="@+id/pointsCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_card"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_block"
+                android:backgroundTint="@color/jb_lime"
                 android:orientation="vertical"
-                android:padding="24dp"
+                android:paddingHorizontal="28dp"
+                android:paddingVertical="22dp"
                 android:visibility="gone">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="완주하면 받을 수 있는 포인트"
-                    android:textColor="@color/jb_text_secondary"
-                    android:textSize="22sp" />
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/bestTotal"
+                        style="@style/Jb.OnBlock"
+                        android:textSize="48sp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Jb.OnBlock"
+                            android:text="완주하면 최대"
+                            android:textSize="24sp" />
+
+                        <TextView
+                            android:id="@+id/bestNote"
+                            style="@style/Jb.OnBlock"
+                            android:textColor="@color/jb_on_block_secondary" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/pointRows"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:orientation="vertical" />
             </LinearLayout>
         </LinearLayout>

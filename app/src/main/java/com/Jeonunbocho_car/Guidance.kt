@@ -30,6 +30,17 @@ fun practiceTitle(type: TurnType): String = when {
 fun formatDistance(meters: Double): String =
     if (meters < 1000) "${meters.roundToInt()}m" else "%.1fkm".format(meters / 1000)
 
+// 큰 숫자와 작은 단위를 따로 그리기 위해 "1.2km" → ("1.2", "km")
+fun splitUnit(distance: String): Pair<String, String> =
+    if (distance.endsWith("km")) distance.dropLast(2) to "km" else distance.removeSuffix("m") to "m"
+
+// 앞 글자에 받침이 있으면 "이", 없으면 "가" (한글이 아니면 "이")
+fun subjectParticle(word: String): String {
+    val last = word.lastOrNull() ?: return "이"
+    if (last !in '가'..'힣') return "이"
+    return if ((last - '가') % 28 == 0) "가" else "이"
+}
+
 // 방향지시등 시기: 도로교통법 시행령 별표 2 (행위 지점 30m 전, 고속도로 100m 전).
 private const val SIGNAL_ROAD = 30
 private const val SIGNAL_HIGHWAY = 100

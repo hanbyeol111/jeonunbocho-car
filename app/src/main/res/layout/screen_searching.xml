@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -15,47 +16,75 @@
             android:id="@+id/btnBack"
             style="@style/Jb.Button.Back"
             android:layout_width="wrap_content"
-            android:layout_height="72dp"
+            android:layout_height="64dp"
             android:layout_marginEnd="20dp"
-            android:text="취소" />
+            android:paddingStart="26dp"
+            android:paddingEnd="26dp"
+            android:text="취소"
+            app:icon="@null" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="길 찾기"
-            android:textSize="34sp"
-            android:textStyle="bold" />
+            style="@style/Jb.HeaderTitle"
+            android:text="길 찾기" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:background="@drawable/bg_level_card"
+        android:layout_height="0dp"
+        android:layout_marginTop="18dp"
+        android:layout_weight="1"
+        android:background="@drawable/bg_block"
+        android:backgroundTint="@color/jb_lime"
+        android:gravity="bottom"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="32dp">
 
         <TextView
             android:id="@+id/searchTitle"
+            style="@style/Jb.OnBlock"
+            android:background="@drawable/bg_pill"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="10dp"
+            android:textSize="24sp" />
+
+        <!-- 몇 번째 후보인지. 위치를 받기 전에는 숨긴다. -->
+        <LinearLayout
+            android:id="@+id/searchAttemptLine"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="30sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/searchAttempt"
+                style="@style/Jb.OnBlock"
+                android:includeFontPadding="false"
+                android:letterSpacing="-0.06"
+                android:textSize="180sp" />
+
+            <TextView
+                android:id="@+id/searchTotal"
+                style="@style/Jb.OnBlock"
+                android:textSize="72sp" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/searchProgress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="@color/jb_on_navy_secondary"
-            android:textSize="22sp" />
+            style="@style/Jb.OnBlock"
+            android:layout_marginTop="16dp"
+            android:textSize="30sp" />
+
+        <LinearLayout
+            android:id="@+id/searchSteps"
+            android:layout_width="match_parent"
+            android:layout_height="12dp"
+            android:layout_marginTop="22dp"
+            android:orientation="horizontal" />
     </LinearLayout>
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="찾는 동안 기본 내비 경로가 바뀔 수 있어요"
-        android:textColor="@color/jb_text_secondary"
-        android:textSize="22sp" />
+        style="@style/Jb.Label"
+        android:layout_marginTop="18dp"
+        android:text="찾는 동안 기본 내비 경로가 바뀔 수 있어요" />
 </LinearLayout>

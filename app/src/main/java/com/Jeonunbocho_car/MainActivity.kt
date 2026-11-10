@@ -11,6 +11,7 @@ import ai.pleos.playground.navi.data.RouteWithWaypointsRequest
 import ai.pleos.playground.navi.data.TBTInfo
 import ai.pleos.playground.navi.helper.NaviHelper
 import ai.pleos.playground.navi.helper.listener.NaviHelperEventListener
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -100,6 +101,15 @@ class MainActivity : AppCompatActivity() {
             return
         }
         findViewById<TextView>(R.id.searchProgress).text = "현재 위치 확인 중"
+        findViewById<TextView>(R.id.searchTotal).text = " / $MAX_SEARCH_ATTEMPTS"
+        val steps = findViewById<LinearLayout>(R.id.searchSteps)
+        repeat(MAX_SEARCH_ATTEMPTS) { i ->
+            steps.addView(View(this).apply {
+                setBackgroundResource(R.drawable.bg_pill)
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
+                    .apply { if (i > 0) marginStart = dp(8) }
+            })
+        }
         pendingSearch = { here -> CourseSearch(title, here, distanceKm, clockwise, required, option) }
         handler.postDelayed(searchTimeout, SEARCH_TIMEOUT_MS)
         naviHelper.getCurrentLocationInfo()
@@ -109,8 +119,7 @@ class MainActivity : AppCompatActivity() {
         val s = search ?: return
         awaitingRoute = true
         routeStart = null
-        findViewById<TextView?>(R.id.searchProgress)?.text =
-            "길 찾는 중 · ${s.attempt + 1} / $MAX_SEARCH_ATTEMPTS"
+        showAttempt(s)
         handler.removeCallbacks(searchTimeout)
         handler.postDelayed(searchTimeout, SEARCH_TIMEOUT_MS)
         val (first, second) = s.waypoints
@@ -130,6 +139,21 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Log.d("JbRoute", "경로 요청 실패", e)
             searchStepFailed()
+        }
+    }
+
+    // 지난 후보는 진하게, 지금 후보는 흐리게, 남은 후보는 흰색.
+    private fun showAttempt(s: CourseSearch) {
+        val progressText = findViewById<TextView?>(R.id.searchProgress) ?: return
+        findViewById<View>(R.id.searchAttemptLine).visibility = View.VISIBLE
+        findViewById<TextView>(R.id.searchAttempt).text = "${s.attempt + 1}"
+        val names = s.required.joinToString(", ") { it.label }
+        progressText.text = if (names.isEmpty()) "순환 코스를 찾는 중" else "${names}${subjectParticle(names)} 있는 길을 찾는 중"
+        val steps = findViewById<LinearLayout>(R.id.searchSteps)
+        for (i in 0 until steps.childCount) {
+            val step = steps.getChildAt(i)
+            step.backgroundTintList = colorOf(if (i <= s.attempt) R.color.jb_on_block else R.color.white)
+            step.alpha = if (i == s.attempt) 0.4f else 1f
         }
     }
 
@@ -175,18 +199,39 @@ class MainActivity : AppCompatActivity() {
         showHome()
     }
 
-    // 연습 상황은 멀면 한 줄, 가까우면 할 일 코칭으로 보여준다.
+    // 연습 상황은 멀면 이름과 거리만, 가까우면 큰 거리와 할 일 코칭으로 보여준다.
     private fun showDriveGuidance(next: NextPractice?, prep: LanePrep?) {
-        val far = findViewById<TextView?>(R.id.practiceFar) ?: return
-        val card = findViewById<View>(R.id.practiceCard)
+        val far = findViewById<View?>(R.id.practiceFar) ?: return
         val near = next?.isNear == true
         far.visibility = if (near) View.GONE else View.VISIBLE
-        card.visibility = if (near) View.VISIBLE else View.GONE
-        far.text = next?.let { "다음 연습 · ${it.title} · ${it.distance}" } ?: NO_PRACTICE_AHEAD
+        findViewById<View>(R.id.driveCourse).visibility = if (near) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.practiceCard).visibility = if (near) View.VISIBLE else View.GONE
+        findViewById<TextView>(R.id.farTitle).apply {
+            text = next?.title ?: NO_PRACTICE_AHEAD
+            // 긴 이름(고속도로 진입 등)도 거리와 한 줄에 들어가게 줄인다.
+            textSize = when {
+                next == null -> 28f
+                next.title.length > 5 -> 40f
+                else -> 60f
+            }
+        }
+        findViewById<TextView>(R.id.farDistance).text = next?.distance ?: ""
         if (near) {
-            findViewById<TextView>(R.id.nextPoint).text = next!!.title
-            findViewById<TextView>(R.id.nextDistance).text = next.distance
-            findViewById<TextView>(R.id.coachingText).text = next.coaching.joinToString("\n")
+            val (number, unit) = splitUnit(next!!.distance)
+            findViewById<TextView>(R.id.nextDistance).text = number
+            findViewById<TextView>(R.id.nextUnit).text = unit
+            findViewById<TextView>(R.id.nextPoint).apply {
+                text = next.title
+                textSize = if (next.title.length > 5) 48f else 60f
+            }
+            val rows = findViewById<LinearLayout>(R.id.coachRows)
+            rows.removeAllViews()
+            next.coaching.forEachIndexed { i, line ->
+                val row = layoutInflater.inflate(R.layout.item_coach_row, rows, false)
+                row.findViewById<TextView>(R.id.coachNumber).text = "${i + 1}"
+                row.findViewById<TextView>(R.id.coachText).text = line
+                rows.addView(row)
+            }
         }
 
         // 가까운 연습 상황과 같은 지점이면 코칭 카드에 이미 나오므로 차선 준비는 숨긴다.
@@ -220,6 +265,44 @@ class MainActivity : AppCompatActivity() {
     private fun updateNaviStatus(text: String) {
         naviStatus = text
         findViewById<TextView?>(R.id.navStatus)?.text = text
+        findViewById<View?>(R.id.navDot)?.visibility = if (naviConnected) View.VISIBLE else View.GONE
+    }
+
+    private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
+
+    private fun colorOf(id: Int) = ColorStateList.valueOf(getColor(id))
+
+    // onBlock: 색 블록 위면 다크에서도 어두운 글자. 흰 카드 위면 줄 사이에 구분선을 넣는다.
+    private fun addRows(container: LinearLayout, rows: List<Pair<String, String>>, onBlock: Boolean) {
+        rows.forEachIndexed { i, (label, value) ->
+            if (!onBlock && i > 0) {
+                container.addView(View(this).apply {
+                    setBackgroundColor(getColor(R.color.jb_background))
+                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(2))
+                })
+            }
+            val row = layoutInflater.inflate(R.layout.item_result_row, container, false)
+            row.findViewById<TextView>(R.id.rowLabel).apply {
+                text = label
+                if (onBlock) setTextColor(getColor(R.color.jb_on_block_secondary))
+            }
+            row.findViewById<TextView>(R.id.rowValue).apply {
+                text = value
+                if (onBlock) setTextColor(getColor(R.color.jb_on_block))
+            }
+            container.addView(row)
+        }
+    }
+
+    // 홈과 난이도별 코스 화면의 레벨 카드
+    private fun showLevelCard(hint: (Int) -> String) {
+        val required = progress.required
+        findViewById<TextView>(R.id.levelValue).text = "Lv.${progress.level}"
+        findViewById<TextView>(R.id.levelPoints).text = required?.let { "${progress.points} / ${it}p" } ?: "MAX"
+        findViewById<LinearProgressIndicator>(R.id.levelProgress).progress =
+            required?.let { progress.points * 100 / it } ?: 100
+        findViewById<TextView>(R.id.levelHint).text =
+            required?.let { hint(it - progress.points) } ?: "최고 레벨이에요"
     }
 
     private fun loadProgress(): Progress {
@@ -236,17 +319,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun showHome() {
         setContentView(R.layout.screen_home)
-        findViewById<TextView>(R.id.navStatus).text = naviStatus
-        val required = progress.required
-        findViewById<TextView>(R.id.levelValue).text =
-            if (required == null) "Lv.$MAX_LEVEL · MAX" else "Lv.${progress.level}"
-        findViewById<TextView>(R.id.levelPoints).text = required?.let { "${progress.points} / ${it}p" } ?: ""
-        findViewById<LinearProgressIndicator>(R.id.levelProgress).progress =
-            required?.let { progress.points * 100 / it } ?: 100
-        findViewById<TextView>(R.id.levelHint).text =
-            required?.let { "다음 레벨까지 ${it - progress.points}p" } ?: "최고 레벨이에요"
-        findViewById<TextView>(R.id.levelCourseHint).text =
-            "Lv.${progress.level} 추천 · ${courseForLevel(progress.level).summary}"
+        updateNaviStatus(naviStatus)
+        showLevelCard { "다음 레벨까지 ${it}p" }
+        findViewById<TextView>(R.id.levelCourseBadge).text = "Lv.${progress.level} 추천"
+        findViewById<TextView>(R.id.levelCourseHint).text = courseForLevel(progress.level).summary
         findViewById<View>(R.id.btnLoop).setOnClickListener { showLoop() }
         findViewById<View>(R.id.btnElement).setOnClickListener { showElement() }
         findViewById<View>(R.id.btnLevel).setOnClickListener { showLevel() }
@@ -262,7 +338,7 @@ class MainActivity : AppCompatActivity() {
 
         // 뒤로 갔다가 다시 와도 고른 값을 유지한다.
         slider.value = loopKm
-        distanceText.text = "%.1f km".format(loopKm)
+        distanceText.text = "%.1f".format(loopKm)
         fun selectDirection(isClockwise: Boolean) {
             loopClockwise = isClockwise
             clockwise.isChecked = isClockwise
@@ -272,14 +348,14 @@ class MainActivity : AppCompatActivity() {
 
         slider.addOnChangeListener { _, value, _ ->
             loopKm = value
-            distanceText.text = "%.1f km".format(value)
+            distanceText.text = "%.1f".format(value)
         }
         // 이미 고른 버튼을 다시 눌러도 선택이 풀리지 않게 직접 정한다.
         clockwise.setOnClickListener { selectDirection(true) }
         counterClockwise.setOnClickListener { selectDirection(false) }
         findViewById<Button>(R.id.btnBack).setOnClickListener { showHome() }
         findViewById<Button>(R.id.btnNext).setOnClickListener {
-            val direction = if (loopClockwise) clockwise.text else counterClockwise.text
+            val direction = if (loopClockwise) "시계 방향" else "반시계 방향"
             startSearch(
                 "순환 코스 %.1fkm · %s".format(loopKm, direction),
                 loopKm.toDouble(), loopClockwise, emptyList(), RouteOption.RECOMMENDED,
@@ -289,12 +365,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun showElement() {
         setContentView(R.layout.screen_element)
+        findViewById<TextView>(R.id.elementHint).text = "통과하면 포인트 · 방향지시등 켜면 +${TURN_SIGNAL_BONUS}p"
         val list = findViewById<LinearLayout>(R.id.screenContent)
-        PracticeElement.entries.forEach { element ->
+        // 포인트가 낮은 것부터 두 개씩 하늘·민트·라임·버터
+        val tagColors = listOf(R.color.jb_sky, R.color.jb_mint, R.color.jb_lime, R.color.jb_butter)
+        PracticeElement.entries.forEachIndexed { i, element ->
             val item = layoutInflater.inflate(R.layout.item_element, list, false)
             item.findViewById<TextView>(R.id.elementTitle).text = element.label
-            item.findViewById<TextView>(R.id.elementDesc).text =
-                "통과하면 ${element.points}p · 방향지시등 켜면 +${TURN_SIGNAL_BONUS}p"
+            item.findViewById<TextView>(R.id.elementPoints).apply {
+                text = "+${element.points}p"
+                backgroundTintList = colorOf(tagColors[minOf(i / 2, tagColors.lastIndex)])
+            }
             item.setOnClickListener {
                 // shortcut: 고속도로 IC는 멀리 있어서 더 길게 찾는다. 거리 값은 주행으로 확인해 조정한다.
                 val highway = element == PracticeElement.HIGHWAY_IC
@@ -316,16 +397,7 @@ class MainActivity : AppCompatActivity() {
         val course = courseForLevel(selected)
         val best = course.bestCase
 
-        val required = progress.required
-        findViewById<TextView>(R.id.levelValue).text =
-            if (required == null) "Lv.$MAX_LEVEL · MAX" else "Lv.$current"
-        findViewById<TextView>(R.id.levelPoints).text = required?.let { "${progress.points} / ${it}p" } ?: ""
-        findViewById<LinearProgressIndicator>(R.id.levelProgress).progress =
-            required?.let { progress.points * 100 / it } ?: 100
-        findViewById<TextView>(R.id.levelHint).text = required?.let {
-            val remaining = it - progress.points
-            "레벨업까지 ${remaining}p · 이 코스로 약 ${course.runsFor(remaining)}번"
-        } ?: "최고 레벨이에요"
+        showLevelCard { remaining -> "레벨업까지 ${remaining}p · 이 코스로 약 ${course.runsFor(remaining)}번" }
 
         findViewById<TextView>(R.id.courseLabel).text =
             if (selected == current) "이번 코스 · Lv.$selected" else "다시 연습 · Lv.$selected"
@@ -334,19 +406,13 @@ class MainActivity : AppCompatActivity() {
             if (course.elements.isEmpty()) "기본 주행" else "${course.elementsText} 포함"
         findViewById<TextView>(R.id.courseOption).text = course.routeOption.label
         findViewById<TextView>(R.id.courseDirection).text = if (loopClockwise) "시계 방향" else "반시계 방향"
-        val pointRows = findViewById<LinearLayout>(R.id.pointRows)
-        buildList {
+        addRows(findViewById(R.id.pointRows), buildList {
             add("거리 ${course.distanceKm}km" to "+${best.distance}p")
             course.elements.forEach { add("${it.label} 통과" to "+${it.points}p") }
             if (best.turnSignalBonus > 0) add("방향지시등 사용" to "+${best.turnSignalBonus}p")
             add("안전 운전 보너스" to "최대 +${best.safetyBonus}p")
             add("예상 시간" to "경로를 만든 뒤")
-        }.forEach { (label, value) ->
-            val row = layoutInflater.inflate(R.layout.item_result_row, pointRows, false)
-            row.findViewById<TextView>(R.id.rowLabel).text = label
-            row.findViewById<TextView>(R.id.rowValue).text = value
-            pointRows.addView(row)
-        }
+        }, onBlock = true)
 
         // 처음에는 지금 레벨 주변만 보여주고, 더 보기로 전체를 펼친다.
         val visible = if (showAll) 1..MAX_LEVEL else maxOf(1, current - 1)..minOf(MAX_LEVEL, current + 2)
@@ -368,10 +434,13 @@ class MainActivity : AppCompatActivity() {
                     else -> R.drawable.bg_badge_locked
                 }
             )
-            badge.setTextColor(getColor(if (level == current) R.color.jb_background else R.color.jb_text_secondary))
+            badge.setTextColor(getColor(if (level <= current) R.color.jb_on_block else R.color.jb_text_secondary))
             row.findViewById<TextView>(R.id.levelRowTitle).text = "Lv.$level · ${c.distanceKm}km"
             row.findViewById<TextView>(R.id.levelRowDesc).text = "${c.elementsText} · $state"
-            if (level == selected) row.setBackgroundResource(R.drawable.bg_level_card)
+            if (level == selected) {
+                row.setBackgroundResource(R.drawable.bg_block)
+                row.backgroundTintList = colorOf(R.color.jb_background)
+            }
             if (level < current && level != selected) {
                 row.findViewById<Button>(R.id.levelRowAction).apply {
                     visibility = View.VISIBLE
@@ -425,9 +494,9 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.routeNote).visibility = View.VISIBLE
 
         findViewById<View>(R.id.summaryCard).visibility = View.VISIBLE
-        findViewById<TextView>(R.id.statRight).text = "${route.rightTurns}\n우회전"
-        findViewById<TextView>(R.id.statLeft).text = "${route.leftTurns}\n좌회전"
-        findViewById<TextView>(R.id.statUturn).text = "${route.uTurns}\n유턴"
+        findViewById<TextView>(R.id.statRight).text = "${route.rightTurns}"
+        findViewById<TextView>(R.id.statLeft).text = "${route.leftTurns}"
+        findViewById<TextView>(R.id.statUturn).text = "${route.uTurns}"
         findViewById<TextView>(R.id.routeSituations).text =
             route.situations.joinToString(" · ") { (name, count) -> "$name ${count}곳" }.ifEmpty { "없음" }
         val first = route.firstPrep
@@ -440,8 +509,9 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.pointsCard).visibility = View.VISIBLE
         val best = route.bestPoints
-        val rows = findViewById<LinearLayout>(R.id.pointRows)
-        buildList {
+        findViewById<TextView>(R.id.bestTotal).text = "+${best.total}p"
+        findViewById<TextView>(R.id.bestNote).text = "방향지시등 켜면 상황마다 +${TURN_SIGNAL_BONUS}p"
+        addRows(findViewById(R.id.pointRows), buildList {
             add("거리 ${route.distanceM / 1000}km" to "+${best.distance}p")
             add("예상 시간 ${route.minutes}분" to "+${best.time}p")
             if (best.elements > 0) {
@@ -450,17 +520,13 @@ class MainActivity : AppCompatActivity() {
             }
             if (best.turnSignalBonus > 0) add("방향지시등 사용" to "최대 +${best.turnSignalBonus}p")
             add("안전 운전 보너스" to "최대 +${best.safetyBonus}p")
-        }.forEach { (label, value) ->
-            val row = layoutInflater.inflate(R.layout.item_result_row, rows, false)
-            row.findViewById<TextView>(R.id.rowLabel).text = label
-            row.findViewById<TextView>(R.id.rowValue).text = value
-            rows.addView(row)
-        }
+        }, onBlock = true)
     }
 
     private fun showDrive(courseInfo: String) {
         setContentView(R.layout.screen_drive)
         findViewById<TextView>(R.id.driveCourse).text = "연습 중 · $courseInfo"
+        findViewById<TextView>(R.id.nearCourse).text = "연습 중 · $courseInfo"
         if (naviConnected) naviHelper.getTBTInfo()
         // 도착 감지(onDestinationArrived)를 연결하면 임시 버튼과 함께 지운다.
         findViewById<Button>(R.id.btnArrive).setOnClickListener { showResult() }
@@ -479,11 +545,12 @@ class MainActivity : AppCompatActivity() {
         saveProgress()
 
         findViewById<TextView>(R.id.earnedPoints).text = "%+dp".format(earned.total)
-        findViewById<TextView>(R.id.resultLevel).text = progress.required
-            ?.let { "지금 Lv.${progress.level} · ${progress.points} / ${it}p" }
-            ?: "지금 Lv.$MAX_LEVEL · MAX"
-        val rows = findViewById<LinearLayout>(R.id.resultRows)
-        buildList {
+        val required = progress.required
+        findViewById<TextView>(R.id.resultLevel).text = "지금 Lv.${progress.level}"
+        findViewById<TextView>(R.id.resultPoints).text = required?.let { "${progress.points} / ${it}p" } ?: "MAX"
+        findViewById<LinearProgressIndicator>(R.id.resultProgress).progress =
+            required?.let { progress.points * 100 / it } ?: 100
+        addRows(findViewById(R.id.resultRows), buildList {
             record.elements.filterNot { it.rerouted }.forEach {
                 val signal = if (it.turnSignalOn) "방향지시등 켬" else "방향지시등 안 켬"
                 add("${it.element.label} · $signal" to "+${it.element.points}p")
@@ -493,12 +560,7 @@ class MainActivity : AppCompatActivity() {
             add("예상 시간 ${record.estimatedMinutes}분" to "+${earned.time}p")
             if (earned.safetyBonus > 0) add("안전 운전 보너스" to "+${earned.safetyBonus}p")
             if (earned.penalty > 0) add("위험 운전 감점" to "-${earned.penalty}p")
-        }.forEach { (label, value) ->
-            val row = layoutInflater.inflate(R.layout.item_result_row, rows, false)
-            row.findViewById<TextView>(R.id.rowLabel).text = label
-            row.findViewById<TextView>(R.id.rowValue).text = value
-            rows.addView(row)
-        }
+        }, onBlock = false)
         findViewById<Button>(R.id.btnHome).setOnClickListener { showHome() }
     }
 

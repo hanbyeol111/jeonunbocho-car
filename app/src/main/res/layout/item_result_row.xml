@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 글자 색은 놓이는 카드에 따라 코드에서 정한다. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="20dp"
     android:gravity="center_vertical"
+    android:minHeight="56dp"
     android:orientation="horizontal">
 
     <TextView
@@ -11,14 +12,13 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textColor="@color/jb_text_secondary"
-        android:textSize="22sp" />
+        android:textSize="24sp" />
 
     <TextView
         android:id="@+id/rowValue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:textSize="26sp"
+        android:textSize="24sp"
         android:textStyle="bold" />
 </LinearLayout>

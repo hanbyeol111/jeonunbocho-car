@@ -129,4 +129,17 @@ class GuidanceTest {
         assertNull(nextPractice(emptyList()))
         assertNull(nextPractice(listOf(tbt(TurnType.TURN_RIGHT, 100.0))))
     }
+
+    @Test
+    fun splitsNumberFromUnit() {
+        assertEquals("80" to "m", splitUnit("80m"))
+        assertEquals("1.2" to "km", splitUnit("1.2km"))
+    }
+
+    @Test
+    fun picksSubjectParticle() {
+        assertEquals("이", subjectParticle("유턴"))
+        assertEquals("가", subjectParticle("회전교차로"))
+        assertEquals("이", subjectParticle("고속도로 진입·진출"))
+    }
 }

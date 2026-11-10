@@ -3,35 +3,37 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="16dp"
+    android:layout_marginTop="8dp"
     android:clickable="true"
     android:focusable="true"
-    app:cardBackgroundColor="@color/jb_card"
-    app:cardCornerRadius="16dp"
+    app:cardBackgroundColor="@color/jb_surface"
+    app:cardCornerRadius="20dp"
     app:cardElevation="0dp"
     app:strokeWidth="0dp">
 
+    <!-- 시안은 66dp지만 차 안에서 누르기 쉽게 72dp로 둔다. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:minHeight="112dp"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:minHeight="72dp"
+        android:orientation="horizontal"
+        android:paddingStart="22dp"
+        android:paddingEnd="10dp">
 
         <TextView
             android:id="@+id/elementTitle"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textSize="30sp"
+            android:layout_weight="1"
+            android:textSize="24sp"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/elementDesc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textColor="@color/jb_text_secondary"
-            android:textSize="22sp" />
+            android:id="@+id/elementPoints"
+            style="@style/Jb.OnBlock"
+            android:background="@drawable/bg_tag"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="8dp" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

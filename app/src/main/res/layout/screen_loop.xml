@@ -16,16 +16,13 @@
             android:id="@+id/btnBack"
             style="@style/Jb.Button.Back"
             android:layout_width="wrap_content"
-            android:layout_height="72dp"
+            android:layout_height="64dp"
             android:layout_marginEnd="20dp"
             android:text="뒤로" />
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="순환 코스"
-            android:textSize="34sp"
-            android:textStyle="bold" />
+            style="@style/Jb.HeaderTitle"
+            android:text="순환 코스" />
     </LinearLayout>
 
     <ScrollView
@@ -35,7 +32,6 @@
         android:layout_weight="1">
 
         <LinearLayout
-            android:id="@+id/screenContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
@@ -43,26 +39,34 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="0dp"
-                android:background="@drawable/bg_card"
+                android:background="@drawable/bg_block"
+                android:backgroundTint="@color/jb_mint"
                 android:orientation="vertical"
-                android:padding="24dp">
+                android:padding="28dp">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="0dp"
-                    android:text="얼마나 달릴까요?"
-                    android:textColor="@color/jb_text_secondary"
-                    android:textSize="22sp" />
+                    style="@style/Jb.OnBlock"
+                    android:text="얼마나 달릴까요?" />
 
-                <TextView
-                    android:id="@+id/distanceText"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textSize="56sp"
-                    android:textStyle="bold" />
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/distanceText"
+                        style="@style/Jb.OnBlock"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.05"
+                        android:textSize="136sp" />
+
+                    <TextView
+                        style="@style/Jb.OnBlock"
+                        android:layout_marginStart="8dp"
+                        android:text="km"
+                        android:textSize="40sp" />
+                </LinearLayout>
 
                 <com.google.android.material.slider.Slider
                     android:id="@+id/distanceSlider"
@@ -74,12 +78,15 @@
                     android:value="5.0"
                     android:valueFrom="1.0"
                     android:valueTo="50.0"
+                    app:haloRadius="0dp"
                     app:labelBehavior="gone"
-                    app:thumbColor="@color/white"
-                    app:thumbRadius="14dp"
-                    app:trackColorActive="@color/jb_accent_soft"
-                    app:trackColorInactive="@color/jb_track"
-                    app:trackHeight="8dp" />
+                    app:thumbColor="@color/jb_on_block"
+                    app:thumbRadius="22dp"
+                    app:thumbStrokeColor="@color/white"
+                    app:thumbStrokeWidth="6dp"
+                    app:trackColorActive="@color/jb_on_block"
+                    app:trackColorInactive="@color/white"
+                    app:trackHeight="12dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -87,63 +94,47 @@
                     android:orientation="horizontal">
 
                     <TextView
+                        style="@style/Jb.OnBlock"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="1km"
-                        android:textColor="@color/jb_text_secondary"
-                        android:textSize="22sp" />
+                        android:text="1km" />
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="50km"
-                        android:textColor="@color/jb_text_secondary"
-                        android:textSize="22sp" />
+                        style="@style/Jb.OnBlock"
+                        android:text="50km" />
                 </LinearLayout>
             </LinearLayout>
+
+            <TextView
+                style="@style/Jb.Label"
+                android:layout_marginTop="24dp"
+                android:text="어느 방향으로 돌까요?" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical"
-                android:padding="24dp">
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="0dp"
-                    android:text="어느 방향으로 돌까요?"
-                    android:textColor="@color/jb_text_secondary"
-                    android:textSize="22sp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnClockwise"
+                    style="@style/Jb.Button.Choice"
+                    android:layout_width="0dp"
+                    android:layout_height="160dp"
+                    android:layout_marginEnd="7dp"
+                    android:layout_weight="1"
+                    android:text="시계 방향\n우회전 위주"
+                    app:icon="@drawable/ic_rotate_cw" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnClockwise"
-                        style="@style/Jb.Button.Choice"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:layout_weight="1"
-                        android:text="시계 방향(우회전 위주)"
-                        app:icon="@drawable/ic_rotate_cw" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnCounterClockwise"
-                        style="@style/Jb.Button.Choice"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:text="반시계 방향(좌회전 위주)"
-                        app:icon="@drawable/ic_rotate_ccw" />
-                </LinearLayout>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCounterClockwise"
+                    style="@style/Jb.Button.Choice"
+                    android:layout_width="0dp"
+                    android:layout_height="160dp"
+                    android:layout_marginStart="7dp"
+                    android:layout_weight="1"
+                    android:text="반시계 방향\n좌회전 위주"
+                    app:icon="@drawable/ic_rotate_ccw" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

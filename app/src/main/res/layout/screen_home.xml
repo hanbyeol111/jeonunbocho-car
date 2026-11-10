@@ -1,303 +1,241 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="32dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="32dp">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="전운보초"
+            android:textSize="34sp"
+            android:textStyle="bold" />
+
+        <View
+            android:id="@+id/navDot"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/bg_pill"
+            android:backgroundTint="@color/jb_status_ok"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/navStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="내비 연결 중…"
+            android:textColor="@color/jb_text_secondary"
+            android:textSize="22sp" />
+    </LinearLayout>
+
+    <!-- 레벨 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/bg_block"
+        android:backgroundTint="@color/jb_ink"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="26dp"
+        android:paddingVertical="22dp">
+
+        <TextView
+            android:id="@+id/levelValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:textColor="@color/jb_lime"
+            android:textSize="56sp"
+            android:textStyle="bold" />
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="전운보초"
-                android:textSize="34sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/navStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="내비 연결 중…"
-                android:textColor="@color/jb_text_secondary"
-                android:textSize="22sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:background="@drawable/bg_level_card"
-            android:orientation="vertical"
-            android:padding="24dp">
+            android:layout_marginStart="24dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="bottom"
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/levelValue"
+                    android:id="@+id/levelHint"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textSize="44sp"
-                    android:textStyle="bold" />
+                    android:textColor="@color/jb_on_ink_secondary"
+                    android:textSize="22sp" />
 
                 <TextView
                     android:id="@+id/levelPoints"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/jb_on_navy_secondary"
-                    android:textSize="24sp" />
+                    android:textColor="@color/jb_on_ink"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <com.google.android.material.progressindicator.LinearProgressIndicator
                 android:id="@+id/levelProgress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:max="100"
-                app:indicatorColor="@color/jb_accent_soft"
-                app:trackColor="@color/jb_track"
-                app:trackCornerRadius="6dp"
-                app:trackThickness="12dp" />
-
-            <TextView
-                android:id="@+id/levelHint"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:textColor="@color/jb_on_navy_secondary"
-                android:textSize="22sp" />
+                android:max="100"
+                app:indicatorColor="@color/jb_lime"
+                app:trackColor="@color/jb_ink_track"
+                app:trackCornerRadius="5dp"
+                app:trackThickness="10dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 메뉴 2×2: 메뉴마다 색 하나 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="13dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnLoop"
+                style="@style/Jb.Tile"
+                app:cardBackgroundColor="@color/jb_mint">
+
+                <LinearLayout style="@style/Jb.TileBody">
+
+                    <ImageView
+                        style="@style/Jb.TileIcon"
+                        android:src="@drawable/ic_loop" />
+
+                    <Space style="@style/Jb.Fill" />
+
+                    <TextView
+                        style="@style/Jb.TileTitle"
+                        android:text="순환 코스" />
+
+                    <TextView
+                        style="@style/Jb.TileDesc"
+                        android:text="거리만 고르면 출발지로 돌아와요" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnElement"
+                style="@style/Jb.Tile"
+                app:cardBackgroundColor="@color/jb_lime">
+
+                <LinearLayout style="@style/Jb.TileBody">
+
+                    <ImageView
+                        style="@style/Jb.TileIcon"
+                        android:src="@drawable/ic_target" />
+
+                    <Space style="@style/Jb.Fill" />
+
+                    <TextView
+                        style="@style/Jb.TileTitle"
+                        android:text="상황별 연습" />
+
+                    <TextView
+                        style="@style/Jb.TileDesc"
+                        android:text="유턴, 회전교차로 골라서 연습" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/btnLoop"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:clickable="true"
-            android:focusable="true"
-            app:cardBackgroundColor="@color/jb_card"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:strokeWidth="0dp">
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:minHeight="112dp"
-                android:orientation="horizontal"
-                android:padding="20dp">
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnLevel"
+                style="@style/Jb.Tile"
+                app:cardBackgroundColor="@color/jb_sky">
 
-                <ImageView
-                    android:layout_width="72dp"
-                    android:layout_height="72dp"
-                    android:background="@drawable/bg_icon"
-                    android:importantForAccessibility="no"
-                    android:padding="16dp"
-                    android:src="@drawable/ic_loop"
-                    app:tint="@color/jb_accent_soft" />
+                <LinearLayout style="@style/Jb.TileBody">
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            style="@style/Jb.TileIcon"
+                            android:src="@drawable/ic_level_up" />
+
+                        <Space
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
+
+                        <TextView
+                            android:id="@+id/levelCourseBadge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_pill"
+                            android:backgroundTint="@color/jb_on_block"
+                            android:paddingHorizontal="12dp"
+                            android:paddingVertical="4dp"
+                            android:textColor="@color/white"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <Space style="@style/Jb.Fill" />
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="순환 코스"
-                        android:textSize="30sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="거리만 고르면 출발지로 돌아와요"
-                        android:textColor="@color/jb_text_secondary"
-                        android:textSize="22sp" />
-                </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/btnElement"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:clickable="true"
-            android:focusable="true"
-            app:cardBackgroundColor="@color/jb_card"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:strokeWidth="0dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:minHeight="112dp"
-                android:orientation="horizontal"
-                android:padding="20dp">
-
-                <ImageView
-                    android:layout_width="72dp"
-                    android:layout_height="72dp"
-                    android:background="@drawable/bg_icon"
-                    android:importantForAccessibility="no"
-                    android:padding="16dp"
-                    android:src="@drawable/ic_target"
-                    app:tint="@color/jb_accent_soft" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="상황별 연습"
-                        android:textSize="30sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="유턴, 회전교차로 골라서 연습"
-                        android:textColor="@color/jb_text_secondary"
-                        android:textSize="22sp" />
-                </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/btnLevel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:clickable="true"
-            android:focusable="true"
-            app:cardBackgroundColor="@color/jb_card"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:strokeWidth="0dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:minHeight="112dp"
-                android:orientation="horizontal"
-                android:padding="20dp">
-
-                <ImageView
-                    android:layout_width="72dp"
-                    android:layout_height="72dp"
-                    android:background="@drawable/bg_icon"
-                    android:importantForAccessibility="no"
-                    android:padding="16dp"
-                    android:src="@drawable/ic_level_up"
-                    app:tint="@color/jb_accent_soft" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="난이도별 코스"
-                        android:textSize="30sp"
-                        android:textStyle="bold" />
+                        style="@style/Jb.TileTitle"
+                        android:text="난이도별 코스" />
 
                     <TextView
                         android:id="@+id/levelCourseHint"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="내 레벨에 맞는 추천 코스"
-                        android:textColor="@color/jb_text_secondary"
-                        android:textSize="22sp" />
+                        style="@style/Jb.TileDesc" />
                 </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            </com.google.android.material.card.MaterialCardView>
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/btnDestination"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:clickable="true"
-            android:focusable="true"
-            app:cardBackgroundColor="@color/jb_card"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="0dp"
-            app:strokeWidth="0dp">
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnDestination"
+                style="@style/Jb.Tile"
+                app:cardBackgroundColor="@color/jb_butter">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:minHeight="112dp"
-                android:orientation="horizontal"
-                android:padding="20dp">
+                <LinearLayout style="@style/Jb.TileBody">
 
-                <ImageView
-                    android:layout_width="72dp"
-                    android:layout_height="72dp"
-                    android:background="@drawable/bg_icon"
-                    android:importantForAccessibility="no"
-                    android:padding="16dp"
-                    android:src="@drawable/ic_place"
-                    app:tint="@color/jb_accent_soft" />
+                    <ImageView
+                        style="@style/Jb.TileIcon"
+                        android:src="@drawable/ic_place" />
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
+                    <Space style="@style/Jb.Fill" />
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="목적지 안내"
-                        android:textSize="30sp"
-                        android:textStyle="bold" />
+                        style="@style/Jb.TileTitle"
+                        android:text="목적지 안내" />
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="즐겨찾기, 최근 목적지로 출발"
-                        android:textColor="@color/jb_text_secondary"
-                        android:textSize="22sp" />
+                        style="@style/Jb.TileDesc"
+                        android:text="즐겨찾기, 최근 목적지로 출발" />
                 </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
     </LinearLayout>
-</ScrollView>
+</LinearLayout>

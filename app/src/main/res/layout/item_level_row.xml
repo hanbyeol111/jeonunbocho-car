@@ -43,12 +43,11 @@
 
     <Button
         android:id="@+id/levelRowAction"
-        style="@style/Jb.Button.Back"
         android:layout_width="wrap_content"
-        android:layout_height="72dp"
+        android:layout_height="64dp"
         android:layout_marginStart="12dp"
+        android:paddingHorizontal="20dp"
         android:text="다시 연습"
-        android:textColor="@color/jb_accent_soft"
         android:visibility="gone"
-        app:icon="@null" />
+        app:backgroundTint="@color/jb_background" />
 </LinearLayout>

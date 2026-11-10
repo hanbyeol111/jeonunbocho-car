@@ -6,74 +6,78 @@
     android:orientation="vertical"
     android:padding="32dp">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="완주했어요"
+        android:textSize="36sp"
+        android:textStyle="bold" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:layout_marginTop="14dp"
+        android:background="@drawable/bg_block"
+        android:backgroundTint="@color/jb_mint"
+        android:orientation="vertical"
+        android:paddingHorizontal="28dp"
+        android:paddingVertical="26dp">
 
         <TextView
-            android:layout_width="wrap_content"
+            style="@style/Jb.OnBlock"
+            android:text="이번에 얻은 포인트" />
+
+        <TextView
+            android:id="@+id/earnedPoints"
+            style="@style/Jb.OnBlock"
+            android:includeFontPadding="false"
+            android:letterSpacing="-0.06"
+            android:textSize="112sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="완주했어요"
-            android:textSize="34sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="6dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/resultLevel"
+                style="@style/Jb.OnBlock"
+                android:layout_width="0dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/resultPoints"
+                style="@style/Jb.OnBlock" />
+        </LinearLayout>
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/resultProgress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:max="100"
+            app:indicatorColor="@color/jb_on_block"
+            app:trackColor="@color/white"
+            app:trackCornerRadius="6dp"
+            app:trackThickness="12dp" />
     </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="14dp"
         android:layout_weight="1">
 
         <LinearLayout
-            android:id="@+id/screenContent"
+            android:id="@+id/resultRows"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="0dp"
-                android:background="@drawable/bg_level_card"
-                android:orientation="vertical"
-                android:padding="24dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="0dp"
-                    android:text="이번에 얻은 포인트"
-                    android:textColor="@color/jb_on_navy_secondary"
-                    android:textSize="22sp" />
-
-                <TextView
-                    android:id="@+id/earnedPoints"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/jb_accent_soft"
-                    android:textSize="72sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/resultLevel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/jb_on_navy_secondary"
-                    android:textSize="22sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/resultRows"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical"
-                android:paddingHorizontal="24dp"
-                android:paddingBottom="24dp" />
-        </LinearLayout>
+            android:background="@drawable/bg_block"
+            android:backgroundTint="@color/jb_surface"
+            android:orientation="vertical"
+            android:paddingHorizontal="26dp"
+            android:paddingVertical="6dp" />
     </ScrollView>
 
     <Button
@@ -81,6 +85,6 @@
         style="@style/Jb.Button.Primary"
         android:layout_width="match_parent"
         android:layout_height="96dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="14dp"
         android:text="처음으로" />
 </LinearLayout>
