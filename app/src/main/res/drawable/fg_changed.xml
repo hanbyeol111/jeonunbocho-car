@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 주행 안내 카드의 내용이 바뀐 순간에만 잠깐 씌우는 테두리 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <stroke android:width="6dp" android:color="@color/jb_on_block" />
+    <corners android:radius="24dp" />
+</shape>

@@ -40,6 +40,9 @@ private const val SEARCH_TIMEOUT_MS = 15_000L
 private const val DRIVING_NOTICE_MS = 5_000L
 private const val MAX_TIGHT_TURNS = 3
 
+// shortcut: 바뀐 카드를 강조하는 시간. 근거 없이 정한 값이라 실제 주행으로 조정한다.
+private const val CHANGED_HIGHLIGHT_MS = 3_000L
+
 // 순환 방향 버튼 글자: 방향은 크게, 설명은 작게 두 줄로. 레이아웃 XML의 \n은 그대로 보일 수 있어 코드로 만든다.
 fun directionLabel(clockwise: Boolean): CharSequence {
     val title = if (clockwise) "시계 방향" else "반시계 방향"
@@ -70,6 +73,8 @@ class MainActivity : AppCompatActivity() {
 
     // 주행 기록. 주행 화면에 있는 동안만 있다. UI 스레드에서만 바꾼다.
     private var session: DriveSession? = null
+    // 주행 화면 큰 카드에 지금 보이는 내용(회전·단계). 바뀌었는지 보는 데 쓴다.
+    private var shownKey: String? = null
     private var vehicle: Vehicle? = null
 
     // 주행 규제(CarUxRestrictions). 주행 중이면 설정 화면을 막는다.
@@ -104,7 +109,7 @@ class MainActivity : AppCompatActivity() {
                     checkCandidate(tbtInfoList)
                 } else {
                     session?.onTbt(tbtInfoList)
-                    showDriveGuidance(nextPractice(tbtInfoList), nextLanePrep(tbtInfoList))
+                    showDriveGuidance(nextPractice(tbtInfoList), nextLanePrep(tbtInfoList), tbtInfoList.size)
                 }
             }
         }
@@ -261,9 +266,18 @@ class MainActivity : AppCompatActivity() {
 
     // 멀 때: 지금 할 일(다음 회전과 차선 준비) → 다음 연습.
     // 가까울 때: 두 카드 대신 연습 상황 코칭 카드. 코스 진행은 두 상태 모두 아래에 있다.
-    private fun showDriveGuidance(next: NextPractice?, prep: LanePrep?) {
+    // listSize: 회전 목록 길이. 지난 지점이 앞에서 빠지므로 (길이 - 위치)가 같은 지점을 가리킨다.
+    private fun showDriveGuidance(next: NextPractice?, prep: LanePrep?, listSize: Int) {
         val far = findViewById<View?>(R.id.practiceFar) ?: return
         val near = next?.isNear == true
+        // 큰 카드의 내용이 바뀐 순간(새 회전, 새 단계)에만 잠깐 강조한다. 거리 숫자가 줄어드는 건 바뀜이 아니다.
+        val key = when {
+            near -> "P${listSize - next!!.index}:${next.stage?.index}"
+            prep != null -> "N${listSize - prep.index}"
+            else -> null
+        }
+        if (key != null && key != shownKey) flashChanged(if (near) R.id.practiceCard else R.id.nowCard)
+        shownKey = key
         far.visibility = if (near) View.GONE else View.VISIBLE
         findViewById<View>(R.id.practiceCard).visibility = if (near) View.VISIBLE else View.GONE
         findViewById<View>(R.id.nowCard).visibility = if (!near && prep != null) View.VISIBLE else View.GONE
@@ -314,6 +328,19 @@ class MainActivity : AppCompatActivity() {
             showSign(R.id.nextSign, next.sign)
             showStage(next.stage)
         }
+    }
+
+    // 테두리를 씌웠다가 일정 시간 뒤 걷는다. 다른 카드가 바뀌면 이전 강조는 바로 걷는다.
+    private fun flashChanged(cardId: Int) {
+        handler.removeCallbacks(clearChanged)
+        clearChanged.run()
+        findViewById<View>(cardId).foreground = getDrawable(R.drawable.fg_changed)
+        handler.postDelayed(clearChanged, CHANGED_HIGHLIGHT_MS)
+    }
+
+    private val clearChanged = Runnable {
+        findViewById<View?>(R.id.nowCard)?.foreground = null
+        findViewById<View?>(R.id.practiceCard)?.foreground = null
     }
 
     // 출발 전에 차가 서 있을 때 익히도록, 회전이 연달아 오는 곳을 가까운 순서로 최대 3곳 보여 준다.
@@ -740,6 +767,7 @@ class MainActivity : AppCompatActivity() {
     private fun showDrive(courseInfo: String, route: RouteSummary?) {
         setContentView(R.layout.screen_drive)
         session = DriveSession(route?.distanceM?.toDouble(), route?.minutes ?: 0)
+        shownKey = null
         findViewById<TextView>(R.id.driveCourse).text = "연습 중 · $courseInfo"
         if (naviConnected) naviHelper.getTBTInfo()
         // 도착 신호(onDestinationArrived)가 오지 않을 때를 위해 직접 끝내는 버튼을 둔다.
@@ -805,6 +833,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         handler.removeCallbacks(searchTimeout)
         handler.removeCallbacks(hideDrivingNotice)
+        handler.removeCallbacks(clearChanged)
         naviHelper.removeListener(naviListener)
         naviHelper.release()
         vehicle?.let {
