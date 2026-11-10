@@ -28,6 +28,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -269,12 +270,26 @@ class MainActivity : AppCompatActivity() {
 
         if (!near && prep != null) {
             val (number, unit) = splitUnit(prep.distance)
+            showIcon(R.id.nowIcon, prep.type?.iconRes())
             findViewById<TextView>(R.id.nowDistance).text = number
             findViewById<TextView>(R.id.nowUnit).text = unit
             findViewById<TextView>(R.id.nowTurn).text = prep.turn
-            findViewById<TextView>(R.id.nowAdvice).text = prep.advice
+            showSign(R.id.nowSign, prep.sign)
+            // 회전이 연달아 오면 차선 준비 대신 '바로 이어서'를 보여 준다(같은 칸을 두 번 쓰지 않는다).
+            val follow = prep.followUp
+            findViewById<TextView>(R.id.nowAdvice).apply {
+                text = prep.advice
+                visibility = if (follow == null) View.VISIBLE else View.GONE
+            }
+            findViewById<View>(R.id.followCard).visibility = if (follow == null) View.GONE else View.VISIBLE
+            if (follow != null) {
+                showIcon(R.id.followIcon, follow.type.iconRes())
+                findViewById<TextView>(R.id.followTurn).text = "${follow.distance} 뒤 ${follow.turn}"
+                findViewById<TextView>(R.id.followAdvice).text = follow.advice
+            }
         }
 
+        showIcon(R.id.farIcon, next?.type?.iconRes())
         findViewById<TextView>(R.id.farTitle).apply {
             text = next?.title ?: NO_PRACTICE_AHEAD
             // 거리(44sp)와 한 줄에 들어가게, 긴 이름(고가도로·지하차도 등)은 줄인다.
@@ -285,25 +300,58 @@ class MainActivity : AppCompatActivity() {
             }
         }
         findViewById<TextView>(R.id.farDistance).text = next?.distance ?: ""
-        findViewById<View>(R.id.farHint).visibility = if (next != null) View.VISIBLE else View.GONE
 
         if (near) {
             val (number, unit) = splitUnit(next!!.distance)
+            showIcon(R.id.nextIcon, next.type.iconRes())
             findViewById<TextView>(R.id.nextDistance).text = number
             findViewById<TextView>(R.id.nextUnit).text = unit
             findViewById<TextView>(R.id.nextPoint).apply {
                 text = next.title
                 textSize = if (next.title.length > 6) 44f else 56f
             }
-            val rows = findViewById<LinearLayout>(R.id.coachRows)
-            rows.removeAllViews()
-            next.coaching.forEachIndexed { i, line ->
-                val row = layoutInflater.inflate(R.layout.item_coach_row, rows, false)
-                row.findViewById<TextView>(R.id.coachNumber).text = "${i + 1}"
-                row.findViewById<TextView>(R.id.coachText).text = line
-                rows.addView(row)
+            showSign(R.id.nextSign, next.sign)
+            showStage(next.stage)
+        }
+    }
+
+    private fun showIcon(id: Int, res: Int?) {
+        findViewById<ImageView>(id).apply {
+            if (res == null) visibility = View.GONE
+            else { setImageResource(res); visibility = View.VISIBLE }
+        }
+    }
+
+    private fun showSign(id: Int, sign: String?) {
+        findViewById<TextView>(id).apply {
+            text = sign?.let { "표지판 · $it" }
+            visibility = if (sign == null) View.GONE else View.VISIBLE
+        }
+    }
+
+    // 지금 단계 한 줄과, 지난 단계는 진하게 남은 단계는 흰색인 막대.
+    private fun showStage(stage: CoachStage?) {
+        val steps = findViewById<LinearLayout>(R.id.stageSteps)
+        val label = findViewById<TextView>(R.id.stageLabel)
+        val text = findViewById<TextView>(R.id.stageText)
+        val visible = if (stage == null) View.GONE else View.VISIBLE
+        steps.visibility = visible; label.visibility = visible; text.visibility = visible
+        if (stage == null) return
+        if (steps.childCount != stage.total) {
+            steps.removeAllViews()
+            repeat(stage.total) { i ->
+                steps.addView(View(this).apply {
+                    setBackgroundResource(R.drawable.bg_pill)
+                    layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
+                        .apply { if (i > 0) marginStart = dp(8) }
+                })
             }
         }
+        for (i in 0 until steps.childCount) {
+            steps.getChildAt(i).backgroundTintList = colorOf(if (i <= stage.index) R.color.jb_on_block else R.color.white)
+        }
+        label.text = "${stage.label} · ${stage.index + 1}/${stage.total}"
+        text.text = stage.text
     }
 
     private fun showCourseProgress() {

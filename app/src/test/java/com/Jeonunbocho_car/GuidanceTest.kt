@@ -82,7 +82,43 @@ class GuidanceTest {
         TurnType.entries.forEach { type ->
             type.coaching().forEach { assertFalse(it, "깜빡이" in it) }
         }
-        assertEquals(listOf("전조등 켜기", "터널 안에서는 앞지르기 금지"), TurnType.TURN_TUNNEL.coaching())
+        assertEquals(listOf("전조등을 켜요", "터널 안에서는 앞지르지 않아요"), TurnType.TURN_TUNNEL.coaching())
+    }
+
+    @Test
+    fun coachingMovesToNextStageAsYouGetCloser() {
+        val uTurn = TurnType.TURN_UTURN.coaching()
+        assertEquals(CoachStage(0, 3, "준비", "왼쪽 차선으로 미리 옮겨 두세요"), coachStage(uTurn, 280.0, false))
+        assertEquals("확인", coachStage(uTurn, 90.0, false)!!.label)
+        assertEquals("맞은편 차가 없을 때 돌아요", coachStage(uTurn, 25.0, false)!!.text)
+        // 2단계 상황은 준비 → 실행
+        assertEquals("실행", coachStage(TurnType.TURN_TUNNEL.coaching(), 80.0, false)!!.label)
+        // 고속도로는 1km / 300m / 100m
+        val exit = TurnType.TURN_EXIT_IC_R.coaching()
+        assertEquals("준비", coachStage(exit, 800.0, true)!!.label)
+        assertEquals("실행", coachStage(exit, 250.0, true)!!.label)
+    }
+
+    @Test
+    fun signTextSkipsEmptyAndArrival() {
+        assertEquals("기업지원허브 방면", signText(" 기업지원허브 방면 "))
+        assertNull(signText(""))
+        assertNull(signText("도착"))
+    }
+
+    @Test
+    fun followUpWarnsAboutBackToBackTurns() {
+        val sameSide = nextLanePrep(listOf(tbt(TurnType.TURN_RIGHT, 300.0), tbt(TurnType.TURN_RIGHT, 150.0)))
+        assertEquals("오른쪽 차선을 그대로 유지해요", sameSide!!.followUp!!.advice)
+        val far = nextLanePrep(listOf(tbt(TurnType.TURN_RIGHT, 300.0), tbt(TurnType.TURN_LEFT, 201.0)))
+        assertNull(far!!.followUp)
+    }
+
+    @Test
+    fun maneuversHaveIcons() {
+        assertEquals(R.drawable.ic_u_turn_left, TurnType.TURN_UTURN.iconRes())
+        assertEquals(R.drawable.ic_ramp_left, TurnType.TURN_EXIT_IC_L.iconRes())
+        assertNull(TurnType.TURN_TUNNEL.iconRes())
     }
 
     @Test
@@ -102,7 +138,11 @@ class GuidanceTest {
             tbt(TurnType.TURN_RIGHT, 50.0),
         )
         assertEquals(
-            LanePrep(2, "400m", "좌회전", "왼쪽 차선으로 미리 가 두면 편해요"),
+            LanePrep(
+                2, "400m", "좌회전", "왼쪽 차선으로 미리 가 두면 편해요", TurnType.TURN_LEFT, null,
+                // 좌회전 50m 뒤 우회전: 연달아 오는 회전
+                FollowUp("50m", TurnType.TURN_RIGHT, "우회전", "오른쪽 차선으로 옮길 준비를 해요"),
+            ),
             nextLanePrep(list),
         )
     }

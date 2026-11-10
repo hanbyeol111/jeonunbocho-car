@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- 멀 때 맨 위: 지금 할 일 = 다음 회전과 차선 준비 -->
+            <!-- 멀 때 맨 위: 지금 할 일 = 다음 회전과 차선 준비 (세로 약 343dp) -->
             <LinearLayout
                 android:id="@+id/nowCard"
                 android:layout_width="match_parent"
@@ -46,26 +46,54 @@
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/nowIcon"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:layout_marginEnd="12dp"
+                        android:importantForAccessibility="no"
+                        app:tint="@color/jb_on_block" />
 
                     <TextView
                         android:id="@+id/nowDistance"
                         style="@style/Jb.OnBlock"
                         android:includeFontPadding="false"
                         android:letterSpacing="-0.05"
-                        android:textSize="88sp" />
+                        android:textSize="80sp" />
 
                     <TextView
                         android:id="@+id/nowUnit"
                         style="@style/Jb.OnBlock"
+                        android:layout_gravity="bottom"
                         android:layout_marginStart="6dp"
-                        android:textSize="36sp" />
+                        android:textSize="34sp" />
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/nowTurn"
-                    style="@style/Jb.OnBlock"
-                    android:textSize="44sp" />
+                <!-- 회전 이름 옆에 내비가 주는 방면 글자. 없으면 숨긴다. 한 줄에 둬서 높이를 아낀다. -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/nowTurn"
+                        style="@style/Jb.OnBlock"
+                        android:textSize="40sp" />
+
+                    <TextView
+                        android:id="@+id/nowSign"
+                        style="@style/Jb.OnBlock"
+                        android:layout_width="0dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:textColor="@color/jb_on_block_secondary"
+                        android:visibility="gone" />
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/nowAdvice"
@@ -78,9 +106,61 @@
                     android:paddingHorizontal="20dp"
                     android:paddingVertical="10dp"
                     android:textSize="24sp" />
+
+                <!-- 회전이 연달아 올 때: 차선 준비 대신 이 칸을 보여 준다. -->
+                <LinearLayout
+                    android:id="@+id/followCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_tag"
+                    android:backgroundTint="@color/jb_on_block"
+                    android:orientation="vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="12dp"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="바로 이어서 · "
+                            android:textColor="@color/jb_lime"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <ImageView
+                            android:id="@+id/followIcon"
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:layout_marginEnd="6dp"
+                            android:importantForAccessibility="no"
+                            app:tint="@color/white" />
+
+                        <TextView
+                            android:id="@+id/followTurn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/white"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/followAdvice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/white"
+                        android:textSize="22sp" />
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- 멀 때 둘째: 다음 연습 상황 -->
+            <!-- 멀 때 둘째: 다음 연습 상황 (세로 약 132dp) -->
             <LinearLayout
                 android:id="@+id/practiceFar"
                 android:layout_width="match_parent"
@@ -102,7 +182,17 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/farIcon"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="10dp"
+                        android:importantForAccessibility="no"
+                        android:visibility="gone"
+                        app:tint="@color/jb_lime" />
 
                     <TextView
                         android:id="@+id/farTitle"
@@ -123,19 +213,9 @@
                         android:textSize="44sp"
                         android:textStyle="bold" />
                 </LinearLayout>
-
-                <TextView
-                    android:id="@+id/farHint"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="가까워지면 할 일을 알려줘요"
-                    android:textColor="@color/jb_on_ink_secondary"
-                    android:textSize="22sp"
-                    android:visibility="gone" />
             </LinearLayout>
 
-            <!-- 가까울 때: 지금 할 일 = 연습 상황 코칭 (위 두 카드 대신) -->
+            <!-- 가까울 때: 지금 할 일 = 연습 상황 코칭, 지금 단계 한 줄 (세로 약 488dp) -->
             <LinearLayout
                 android:id="@+id/practiceCard"
                 android:layout_width="match_parent"
@@ -153,7 +233,16 @@
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/nextIcon"
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:layout_marginEnd="16dp"
+                        android:importantForAccessibility="no"
+                        app:tint="@color/jb_on_block" />
 
                     <TextView
                         android:id="@+id/nextDistance"
@@ -165,6 +254,7 @@
                     <TextView
                         android:id="@+id/nextUnit"
                         style="@style/Jb.OnBlock"
+                        android:layout_gravity="bottom"
                         android:layout_marginStart="8dp"
                         android:textSize="48sp" />
                 </LinearLayout>
@@ -172,14 +262,40 @@
                 <TextView
                     android:id="@+id/nextPoint"
                     style="@style/Jb.OnBlock"
-                    android:layout_marginBottom="12dp"
                     android:textSize="56sp" />
 
+                <TextView
+                    android:id="@+id/nextSign"
+                    style="@style/Jb.OnBlock"
+                    android:textColor="@color/jb_on_block_secondary"
+                    android:visibility="gone" />
+
+                <!-- 단계 막대(준비·확인·실행). 칸 수는 상황마다 다르다. -->
                 <LinearLayout
-                    android:id="@+id/coachRows"
+                    android:id="@+id/stageSteps"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical" />
+                    android:layout_height="12dp"
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal" />
+
+                <TextView
+                    android:id="@+id/stageLabel"
+                    style="@style/Jb.OnBlock"
+                    android:layout_marginTop="8dp" />
+
+                <TextView
+                    android:id="@+id/stageText"
+                    style="@style/Jb.OnBlock"
+                    android:layout_width="match_parent"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/bg_block"
+                    android:backgroundTint="@color/jb_surface"
+                    android:minHeight="74dp"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="12dp"
+                    android:textColor="@color/jb_text"
+                    android:textSize="28sp" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
