@@ -1,41 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 주행 중 설정 화면 위에 덮는 판. 아래 화면을 누르지 못하게 터치를 받는다. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- 주행 중 설정 화면 위에 까는 투명한 판. 화면은 그대로 보이고 터치만 받는다.
+     터치하면 아래 안내가 잠깐 떴다가 사라진다(전체 화면 팝업은 쓰지 않는다). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/drivingBlock"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/jb_background"
     android:clickable="true"
+    android:contentDescription="주행 중에는 코스를 고를 수 없어요"
     android:focusable="true"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="32dp"
     android:visibility="gone">
 
     <LinearLayout
+        android:id="@+id/drivingNotice"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_margin="32dp"
+        android:alpha="0"
         android:background="@drawable/bg_block"
         android:backgroundTint="@color/jb_butter"
+        android:elevation="8dp"
         android:orientation="vertical"
-        android:padding="32dp">
+        android:paddingHorizontal="28dp"
+        android:paddingVertical="24dp"
+        android:visibility="gone">
 
         <TextView
             style="@style/Jb.OnBlock"
-            android:text="주행 중이에요"
-            android:textSize="40sp" />
-
-        <TextView
-            style="@style/Jb.OnBlock"
-            android:layout_marginTop="12dp"
-            android:text="코스는 차를 세운 뒤 고를 수 있어요"
-            android:textSize="28sp" />
+            android:text="주행 중에는 사용할 수 없어요"
+            android:textSize="32sp" />
 
         <TextView
             style="@style/Jb.OnBlock"
             android:layout_marginTop="8dp"
-            android:text="정차하면 이 화면이 저절로 사라져요"
+            android:text="차를 세우면 다시 쓸 수 있어요"
             android:textColor="@color/jb_on_block_secondary"
+            android:textSize="24sp"
             android:textStyle="normal" />
     </LinearLayout>
-</LinearLayout>
+</FrameLayout>

@@ -36,6 +36,7 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.slider.Slider
 
 private const val SEARCH_TIMEOUT_MS = 15_000L
+private const val DRIVING_NOTICE_MS = 5_000L
 
 // 순환 방향 버튼 글자: 방향은 크게, 설명은 작게 두 줄로. 레이아웃 XML의 \n은 그대로 보일 수 있어 코드로 만든다.
 fun directionLabel(clockwise: Boolean): CharSequence {
@@ -370,9 +371,13 @@ class MainActivity : AppCompatActivity() {
 
     // 설정 화면(코스 고르기·출발)은 위에 '주행 중' 판을 함께 깔고, 규제 상태에 따라 보이거나 숨긴다.
     private fun showSetupScreen(layout: Int) {
+        handler.removeCallbacks(hideDrivingNotice)
         setContentView(layout)
+        val block = layoutInflater.inflate(R.layout.view_driving_block, null)
+        // 투명한 판이 터치를 모두 받아 아래 버튼이 눌리지 않게 하고, 누를 때마다 안내를 띄운다.
+        block.setOnClickListener { showDrivingNotice() }
         addContentView(
-            layoutInflater.inflate(R.layout.view_driving_block, null),
+            block,
             ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
         )
         updateDrivingBlock()
@@ -380,6 +385,27 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateDrivingBlock() {
         findViewById<View?>(R.id.drivingBlock)?.visibility = if (setupBlocked) View.VISIBLE else View.GONE
+        if (!setupBlocked) {
+            handler.removeCallbacks(hideDrivingNotice)
+            findViewById<View?>(R.id.drivingNotice)?.apply { animate().cancel(); alpha = 0f; visibility = View.GONE }
+        }
+    }
+
+    // 안내는 5초 보이고 서서히 사라진다. 다시 누르면 5초를 새로 센다.
+    private fun showDrivingNotice() {
+        val notice = findViewById<View?>(R.id.drivingNotice) ?: return
+        handler.removeCallbacks(hideDrivingNotice)
+        notice.animate().cancel()
+        notice.visibility = View.VISIBLE
+        notice.animate().alpha(1f).setDuration(200).start()
+        notice.announceForAccessibility("주행 중에는 사용할 수 없어요. 차를 세우면 다시 쓸 수 있어요")
+        handler.postDelayed(hideDrivingNotice, DRIVING_NOTICE_MS)
+    }
+
+    private val hideDrivingNotice = Runnable {
+        findViewById<View?>(R.id.drivingNotice)?.let { notice ->
+            notice.animate().alpha(0f).setDuration(400).withEndAction { notice.visibility = View.GONE }.start()
+        }
     }
 
     // 다른 화면을 보는 중이면 화면을 바꾸지 않고 값만 저장한다.
@@ -710,6 +736,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         handler.removeCallbacks(searchTimeout)
+        handler.removeCallbacks(hideDrivingNotice)
         naviHelper.removeListener(naviListener)
         naviHelper.release()
         vehicle?.let {
