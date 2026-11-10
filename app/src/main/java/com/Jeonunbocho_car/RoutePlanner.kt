@@ -69,6 +69,8 @@ data class RouteSummary(
     // 유턴을 뺀 연습 상황과 개수. 경로에 나오는 순서대로.
     val situations: List<Pair<String, Int>>,
     val firstPrep: LanePrep?,
+    // 회전이 연달아 오는 곳(출발 전 '미리 알아 둘 구간').
+    val tightTurns: List<TightTurn>,
     // 모든 연습 상황에서 방향지시등을 켜고 과속·급감속이 없을 때의 최대치.
     val bestPoints: EarnedPoints,
     val practiceElements: List<PracticeElement>,
@@ -89,6 +91,7 @@ fun summarizeRoute(distanceM: Int, durationS: Int, tbtList: List<TBTInfo>): Rout
         situations = practice.filter { it != TurnType.TURN_UTURN }
             .map { practiceTitle(it) }.groupingBy { it }.eachCount().toList(),
         firstPrep = nextLanePrep(tbtList),
+        tightTurns = tightTurns(tbtList),
         bestPoints = calculatePoints(
             DriveRecord(distanceM / 1000.0, (durationS + 59) / 60, elements.map { PassedElement(it, turnSignalOn = true) })
         ),

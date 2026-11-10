@@ -209,6 +209,32 @@
                         android:layout_height="wrap_content"
                         android:textSize="22sp" />
                 </LinearLayout>
+
+                <!-- 출발 전 브리핑: 회전이 연달아 오는 곳. 없으면 숨긴다. -->
+                <LinearLayout
+                    android:id="@+id/tightGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        style="@style/Jb.Label"
+                        android:layout_marginTop="20dp"
+                        android:text="미리 알아 둘 구간 · 회전이 연달아 와요" />
+
+                    <LinearLayout
+                        android:id="@+id/tightRows"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+
+                    <TextView
+                        android:id="@+id/tightMore"
+                        style="@style/Jb.Label"
+                        android:layout_marginTop="8dp"
+                        android:visibility="gone" />
+                </LinearLayout>
             </LinearLayout>
 
             <!-- 완주하면 받을 수 있는 포인트 -->

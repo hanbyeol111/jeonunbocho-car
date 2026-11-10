@@ -211,3 +211,16 @@ fun nextLanePrep(tbtList: List<TBTInfo>): LanePrep? =
             signText(tbtList[it.index].description), followUp(tbtList, it.index),
         )
     }
+
+// 출발 전 브리핑용: 회전이 연달아 오는 곳. at은 출발지부터 첫 회전까지의 누적 거리.
+data class TightTurn(val at: String, val turn: String, val followUp: FollowUp)
+
+// 주행 중 '바로 이어서'와 같은 기준으로 경로 전체를 훑는다. 가까운 순서.
+fun tightTurns(tbtList: List<TBTInfo>): List<TightTurn> {
+    var fromStart = 0.0
+    return tbtList.mapIndexedNotNull { i, tbt ->
+        fromStart += tbt.distance
+        val (turn, _) = tbt.type.lanePrep() ?: return@mapIndexedNotNull null
+        followUp(tbtList, i)?.let { TightTurn(formatDistance(fromStart), turn, it) }
+    }
+}

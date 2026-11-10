@@ -115,6 +115,23 @@ class GuidanceTest {
     }
 
     @Test
+    fun tightTurnsListsBackToBackTurnsFromStart() {
+        val route = listOf(
+            tbt(TurnType.TURN_RIGHT, 1200.0), // 1.2km 지점 우회전 → 120m 뒤 좌회전
+            tbt(TurnType.TURN_LEFT, 120.0),
+            tbt(TurnType.TURN_RIGHT, 800.0), // 다음 회전이 멀어 빠짐
+            tbt(TurnType.TURN_UTURN, 900.0),
+            tbt(TurnType.TURN_ARRIVE, 300.0),
+        )
+        val tight = tightTurns(route)
+        assertEquals(1, tight.size)
+        assertEquals("1.2km", tight[0].at)
+        assertEquals("우회전", tight[0].turn)
+        assertEquals("120m", tight[0].followUp.distance)
+        assertEquals("좌회전", tight[0].followUp.turn)
+    }
+
+    @Test
     fun maneuversHaveIcons() {
         assertEquals(R.drawable.ic_u_turn_left, TurnType.TURN_UTURN.iconRes())
         assertEquals(R.drawable.ic_ramp_left, TurnType.TURN_EXIT_IC_L.iconRes())

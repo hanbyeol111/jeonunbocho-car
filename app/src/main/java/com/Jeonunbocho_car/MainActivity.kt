@@ -38,6 +38,7 @@ import com.google.android.material.slider.Slider
 
 private const val SEARCH_TIMEOUT_MS = 15_000L
 private const val DRIVING_NOTICE_MS = 5_000L
+private const val MAX_TIGHT_TURNS = 3
 
 // 순환 방향 버튼 글자: 방향은 크게, 설명은 작게 두 줄로. 레이아웃 XML의 \n은 그대로 보일 수 있어 코드로 만든다.
 fun directionLabel(clockwise: Boolean): CharSequence {
@@ -312,6 +313,24 @@ class MainActivity : AppCompatActivity() {
             }
             showSign(R.id.nextSign, next.sign)
             showStage(next.stage)
+        }
+    }
+
+    // 출발 전에 차가 서 있을 때 익히도록, 회전이 연달아 오는 곳을 가까운 순서로 최대 3곳 보여 준다.
+    private fun showTightTurns(tight: List<TightTurn>) {
+        findViewById<View>(R.id.tightGroup).visibility = if (tight.isEmpty()) View.GONE else View.VISIBLE
+        val rows = findViewById<LinearLayout>(R.id.tightRows)
+        tight.take(MAX_TIGHT_TURNS).forEach { t ->
+            val row = layoutInflater.inflate(R.layout.item_tight_turn, rows, false)
+            row.findViewById<TextView>(R.id.tightAt).text = "${t.at} 지점"
+            row.findViewById<TextView>(R.id.tightTurns).text = "${t.turn} → ${t.followUp.distance} 뒤 ${t.followUp.turn}"
+            row.findViewById<TextView>(R.id.tightAdvice).text = t.followUp.advice
+            rows.addView(row)
+        }
+        findViewById<TextView>(R.id.tightMore).apply {
+            val more = tight.size - MAX_TIGHT_TURNS
+            text = "외 ${more}곳"
+            visibility = if (more > 0) View.VISIBLE else View.GONE
         }
     }
 
@@ -701,6 +720,7 @@ class MainActivity : AppCompatActivity() {
             findViewById<TextView>(R.id.routeFirst).text = "${first.distance} 앞 ${first.turn}"
             findViewById<TextView>(R.id.routeFirstAdvice).text = first.advice
         }
+        showTightTurns(route.tightTurns)
 
         findViewById<View>(R.id.pointsCard).visibility = View.VISIBLE
         val best = route.bestPoints
