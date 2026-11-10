@@ -240,12 +240,29 @@ class MainActivity : AppCompatActivity() {
         if (showPrep) {
             findViewById<TextView>(R.id.lanePrepTurn).text = "${prep!!.distance} 앞 ${prep.turn}"
             findViewById<TextView>(R.id.lanePrepAdvice).text = prep.advice
-            findViewById<TextView>(R.id.lanePrepSignal).text = prep.signal
+        }
+    }
+
+    // 시안(600×800) 비율 그대로 보이게, 창이 시안보다 크면 화면 전체를 같은 비율로 키운다.
+    // 창 크기를 바꾸면 액티비티가 다시 만들어지며 새로 계산된다.
+    // dp·sp를 픽셀로 바꿀 때 쓰는 밀도 값을 직접 키운다. setContentView 전에 불러야 한다.
+    @Suppress("DEPRECATION") // scaledDensity: sp 변환에 아직 쓰인다.
+    private fun applyDesignScale() {
+        val config = resources.configuration
+        val scale = designScale(config.screenWidthDp, config.screenHeightDp)
+        Log.d("JbScreen", "창 ${config.screenWidthDp}×${config.screenHeightDp}dp · 배율 $scale")
+        if (scale <= 1f) return
+        val density = config.densityDpi / 160f * scale
+        resources.displayMetrics.apply {
+            this.density = density
+            scaledDensity = density * config.fontScale
+            densityDpi = (config.densityDpi * scale).toInt()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        applyDesignScale()
         progress = loadProgress()
 
         naviHelper = NaviHelper(applicationContext)
@@ -365,7 +382,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showElement() {
         setContentView(R.layout.screen_element)
-        findViewById<TextView>(R.id.elementHint).text = "통과하면 포인트 · 방향지시등 켜면 +${TURN_SIGNAL_BONUS}p"
+        findViewById<TextView>(R.id.elementHint).text = "골라서 통과하면 포인트를 받아요"
         val list = findViewById<LinearLayout>(R.id.screenContent)
         // 포인트가 낮은 것부터 두 개씩 하늘·민트·라임·버터
         val tagColors = listOf(R.color.jb_sky, R.color.jb_mint, R.color.jb_lime, R.color.jb_butter)
@@ -409,7 +426,6 @@ class MainActivity : AppCompatActivity() {
         addRows(findViewById(R.id.pointRows), buildList {
             add("거리 ${course.distanceKm}km" to "+${best.distance}p")
             course.elements.forEach { add("${it.label} 통과" to "+${it.points}p") }
-            if (best.turnSignalBonus > 0) add("방향지시등 사용" to "+${best.turnSignalBonus}p")
             add("안전 운전 보너스" to "최대 +${best.safetyBonus}p")
             add("예상 시간" to "경로를 만든 뒤")
         }, onBlock = true)
@@ -509,8 +525,8 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.pointsCard).visibility = View.VISIBLE
         val best = route.bestPoints
-        findViewById<TextView>(R.id.bestTotal).text = "+${best.total}p"
-        findViewById<TextView>(R.id.bestNote).text = "방향지시등 켜면 상황마다 +${TURN_SIGNAL_BONUS}p"
+        // 방향지시등 보너스는 출발 전에 안내하지 않고 결과 화면에서만 보여준다.
+        findViewById<TextView>(R.id.bestTotal).text = "+${best.total - best.turnSignalBonus}p"
         addRows(findViewById(R.id.pointRows), buildList {
             add("거리 ${route.distanceM / 1000}km" to "+${best.distance}p")
             add("예상 시간 ${route.minutes}분" to "+${best.time}p")
@@ -518,7 +534,6 @@ class MainActivity : AppCompatActivity() {
                 val names = route.practiceElements.distinct().joinToString(", ") { it.label }
                 add(names to "+${best.elements}p")
             }
-            if (best.turnSignalBonus > 0) add("방향지시등 사용" to "최대 +${best.turnSignalBonus}p")
             add("안전 운전 보너스" to "최대 +${best.safetyBonus}p")
         }, onBlock = true)
     }

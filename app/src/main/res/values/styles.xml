@@ -45,6 +45,11 @@
         <item name="android:paddingEnd">24dp</item>
     </style>
 
+    <!-- 글자 기본색: 따로 정하지 않은 글자는 진하게 -->
+    <style name="Jb.Text" parent="Widget.AppCompat.TextView">
+        <item name="android:textColor">@color/jb_text</item>
+    </style>
+
     <!-- 홈 메뉴 색 타일 -->
     <style name="Jb.Tile" parent="">
         <item name="android:layout_width">0dp</item>
@@ -99,7 +104,8 @@
     <style name="Jb.HeaderTitle" parent="">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textSize">32sp</item>
+        <item name="android:textColor">@color/jb_text</item>
+        <item name="android:textSize">36sp</item>
         <item name="android:textStyle">bold</item>
     </style>
 

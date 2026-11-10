@@ -78,12 +78,10 @@ class GuidanceTest {
     }
 
     @Test
-    fun coachingIncludesSignalTiming() {
-        assertEquals("30m 전부터 왼쪽 깜빡이", TurnType.TURN_UTURN.coaching().last())
-        assertEquals("100m 전부터 오른쪽 깜빡이", TurnType.TURN_EXIT_IC_R.coaching().last())
-        assertEquals("30m 전부터 오른쪽 깜빡이", TurnType.TURN_ENTER_IC_R.coaching().last())
-        assertEquals("차로를 바꿀 때 깜빡이", TurnType.TURN_EXIT_IC_C.coaching().last())
-        assertEquals("차로를 바꿀 때 왼쪽 깜빡이", TurnType.TURN_KEEP_L.coaching().last())
+    fun coachingHasNoTurnSignalLines() {
+        TurnType.entries.forEach { type ->
+            type.coaching().forEach { assertFalse(it, "깜빡이" in it) }
+        }
         assertEquals(listOf("전조등 켜기", "터널 안에서는 앞지르기 금지"), TurnType.TURN_TUNNEL.coaching())
     }
 
@@ -104,7 +102,7 @@ class GuidanceTest {
             tbt(TurnType.TURN_RIGHT, 50.0),
         )
         assertEquals(
-            LanePrep(2, "400m", "좌회전", "왼쪽 차선으로 미리 가 두면 편해요", "30m 전부터 왼쪽 깜빡이"),
+            LanePrep(2, "400m", "좌회전", "왼쪽 차선으로 미리 가 두면 편해요"),
             nextLanePrep(list),
         )
     }
@@ -112,8 +110,6 @@ class GuidanceTest {
     @Test
     fun lanePrepDirections() {
         assertEquals("오른쪽 끝 차선으로 미리 가 두면 편해요", nextLanePrep(listOf(tbt(TurnType.TURN_RIGHT, 10.0)))?.advice)
-        assertEquals("30m 전부터 오른쪽 깜빡이", nextLanePrep(listOf(tbt(TurnType.TURN_RIGHT, 10.0)))?.signal)
-        assertEquals("100m 전부터 오른쪽 깜빡이", nextLanePrep(listOf(tbt(TurnType.TURN_EXIT_IC_R, 10.0)))?.signal)
         assertEquals("오른쪽 길", nextLanePrep(listOf(tbt(TurnType.TURN_KEEP_R, 10.0)))?.turn)
         assertNull(nextLanePrep(listOf(tbt(TurnType.TURN_ENTER_ROUNDABOUT_06, 10.0), tbt(TurnType.TURN_ARRIVE, 5.0))))
     }
@@ -134,6 +130,13 @@ class GuidanceTest {
     fun splitsNumberFromUnit() {
         assertEquals("80" to "m", splitUnit("80m"))
         assertEquals("1.2" to "km", splitUnit("1.2km"))
+    }
+
+    @Test
+    fun scalesToDesignCanvas() {
+        assertEquals(1.5f, designScale(900, 1300), 0.001f) // 가로에 맞춤
+        assertEquals(1.25f, designScale(1200, 1000), 0.001f) // 세로에 맞춤
+        assertEquals(1f, designScale(500, 700), 0.001f) // 작은 창은 그대로
     }
 
     @Test

@@ -131,11 +131,6 @@
             android:id="@+id/lanePrepAdvice"
             style="@style/Jb.OnBlock"
             android:textSize="24sp" />
-
-        <TextView
-            android:id="@+id/lanePrepSignal"
-            style="@style/Jb.OnBlock"
-            android:textSize="24sp" />
     </LinearLayout>
 
     <Button

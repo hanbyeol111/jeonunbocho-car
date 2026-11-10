@@ -245,11 +245,6 @@
                             style="@style/Jb.OnBlock"
                             android:text="완주하면 최대"
                             android:textSize="24sp" />
-
-                        <TextView
-                            android:id="@+id/bestNote"
-                            style="@style/Jb.OnBlock"
-                            android:textColor="@color/jb_on_block_secondary" />
                     </LinearLayout>
                 </LinearLayout>
 
