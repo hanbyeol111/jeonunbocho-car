@@ -325,6 +325,11 @@ class MainActivity : AppCompatActivity() {
         awaitingRoute = true
         routeStart = null
         showAttempt(s)
+        // 순환 코스는 길 찾기 화면이 없어 코스 확인 화면의 안내 줄로 진행을 알린다.
+        if (findViewById<View?>(R.id.searchProgress) == null) searchMessage(
+            if (s.chosen != null) "설정한 거리에 가장 가까운 코스를 불러오는 중이에요"
+            else "설정한 거리에 맞는 코스를 찾는 중이에요 (${s.attempt + 1}/$MAX_SEARCH_ATTEMPTS)"
+        )
         handler.removeCallbacks(searchTimeout)
         handler.postDelayed(searchTimeout, SEARCH_TIMEOUT_MS)
         val (first, second) = s.waypoints
@@ -386,13 +391,14 @@ class MainActivity : AppCompatActivity() {
         val start = routeStart ?: return
         handler.removeCallbacks(searchTimeout)
         awaitingRoute = false
-        if (!s.accepts(tbtList)) {
+        val (distance, duration) = routeTotals(start.distance, start.duration, tbtList.sumOf { it.distance })
+        Log.d("JbRoute", "후보 ${s.attempt + 1} 받은 값 ${start.distance}m ${start.duration}s → 전체 ${distance}m ${duration}s")
+        s.recordDistance(distance)
+        if (!s.accepts(tbtList, distance)) {
             searchStepFailed()
             return
         }
         search = null
-        val (distance, duration) = routeTotals(start.distance, start.duration, tbtList.sumOf { it.distance })
-        Log.d("JbRoute", "코스 거리 받은 값 ${start.distance}m ${start.duration}s → 회전 목록 합 ${distance}m ${duration}s")
         showConfirm(s.title, summarizeRoute(distance, duration, tbtList))
     }
 
@@ -412,9 +418,15 @@ class MainActivity : AppCompatActivity() {
             return
         }
         // 길 찾기 화면이면 찾기를 끝내지 않고, 본 후보 번호를 눌러 기본 내비에 다시 띄우게 한다.
-        // (순환 코스는 길 찾기 화면이 없어 여기서 끝낸다.)
         if (findViewById<View?>(R.id.searchSteps) != null) {
             showRevisitAll(s)
+            return
+        }
+        // 순환 코스: 거리가 맞는 후보가 없으면 가장 가까웠던 후보를 다시 띄워 쓴다(한 번만).
+        val closest = s.closest
+        if (closest != null && s.chosen == null) {
+            s.choose(closest.first)
+            requestCandidate()
             return
         }
         search = null

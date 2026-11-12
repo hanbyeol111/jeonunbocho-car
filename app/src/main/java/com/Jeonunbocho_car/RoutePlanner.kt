@@ -3,6 +3,7 @@ package com.Jeonunbocho_car
 import ai.pleos.playground.navi.constants.RouteOption
 import ai.pleos.playground.navi.constants.TurnType
 import ai.pleos.playground.navi.data.TBTInfo
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -17,6 +18,11 @@ private const val ROAD_FACTOR = 1.3
 private const val ATTEMPT_ROTATION_DEG = 72.0
 
 const val MAX_SEARCH_ATTEMPTS = 5
+
+// shortcut: 순환 코스 거리 허용 범위 ±30%와 크기 보정 한계는 임의 값. 실제 도로에서 시험해 조정한다.
+const val LOOP_DISTANCE_TOLERANCE = 0.3
+private const val MIN_SIZE_FACTOR = 0.3
+private const val MAX_SIZE_FACTOR = 3.0
 
 // 짧은 거리라 평면 근사로 충분하다.
 fun LatLng.offset(bearingDeg: Double, meters: Double): LatLng {
@@ -51,12 +57,37 @@ class CourseSearch(
     var chosen: Int? = null
         private set
 
-    val waypoints: List<LatLng> get() = loopWaypoints(start, distanceKm, clockwise, attempt)
+    // 후보마다 경유지 거리에 곱할 값. 앞 후보가 원하는 거리보다 길었으면 다음 후보는 그만큼 줄인다.
+    private val sizeFactors = mutableMapOf(0 to 1.0)
+
+    // 원하는 거리에 가장 가까웠던 후보(시도 번호, 실제 거리 m). 순환 코스에서 맞는 후보가 없을 때 쓴다.
+    var closest: Pair<Int, Int>? = null
+        private set
+
+    // 응답이 없던 후보는 보정값이 없으니 앞 후보의 값을 이어 쓴다.
+    private fun sizeFactor(i: Int): Double = sizeFactors[i] ?: if (i > 0) sizeFactor(i - 1) else 1.0
+
+    val waypoints: List<LatLng>
+        get() = loopWaypoints(start, distanceKm * sizeFactor(attempt), clockwise, attempt)
 
     fun matches(tbtList: List<TBTInfo>): Boolean =
         required.all { element -> tbtList.any { it.type.toPracticeElement() == element } }
 
-    fun accepts(tbtList: List<TBTInfo>): Boolean = chosen != null || matches(tbtList)
+    // 순환 코스(찾을 상황 없음)는 거리가 원하는 거리의 ±LOOP_DISTANCE_TOLERANCE 안이어야 한다.
+    fun distanceFits(totalM: Int): Boolean =
+        required.isNotEmpty() || abs(totalM - distanceKm * 1000) <= distanceKm * 1000 * LOOP_DISTANCE_TOLERANCE
+
+    fun accepts(tbtList: List<TBTInfo>, totalM: Int): Boolean =
+        chosen != null || (matches(tbtList) && distanceFits(totalM))
+
+    // 받은 후보의 실제 거리를 기록한다: 가장 가까운 후보를 갱신하고, 다음 후보의 크기를 비율로 맞춘다.
+    fun recordDistance(totalM: Int) {
+        if (totalM <= 0) return
+        val target = distanceKm * 1000
+        if (closest == null || abs(totalM - target) < abs(closest!!.second - target)) closest = attempt to totalM
+        val factor = sizeFactor(attempt) * target / totalM
+        sizeFactors.putIfAbsent(attempt + 1, factor.coerceIn(MIN_SIZE_FACTOR, MAX_SIZE_FACTOR))
+    }
 
     // 지금까지 요청해 본 가장 뒤 후보. 이 번호까지는 언제든 다시 볼 수 있다.
     var furthest = 0

@@ -116,11 +116,33 @@ class RoutePlannerTest {
         val second = run { s.nextAttempt(); s.waypoints }
         repeat(MAX_SEARCH_ATTEMPTS - 2) { s.nextAttempt() }
         val noTunnel = listOf(TBTInfo(TurnType.TURN_LEFT, 100.0, ""))
-        assertFalse(s.accepts(noTunnel))
+        assertFalse(s.accepts(noTunnel, 5000))
 
         s.choose(1)
         assertEquals(second, s.waypoints)
-        assertTrue(s.accepts(noTunnel))
+        assertTrue(s.accepts(noTunnel, 5000))
+    }
+
+    // 순환 코스: 거리가 ±30% 밖이면 받지 않고, 다음 후보는 비율만큼 작게 만들며, 가장 가까운 후보를 기억한다.
+    @Test
+    fun loopSearchFitsDistanceAndShrinksNextCandidate() {
+        val s = CourseSearch("테스트", start, 14.0, true, emptyList(), RouteOption.RECOMMENDED)
+        val route = listOf(TBTInfo(TurnType.TURN_LEFT, 100.0, ""))
+        val firstSide = meters(start, s.waypoints[0])
+
+        s.recordDistance(28000)
+        assertFalse(s.accepts(route, 28000))
+        assertEquals(0 to 28000, s.closest)
+
+        s.nextAttempt()
+        assertEquals(firstSide / 2, meters(start, s.waypoints[0]), 1.0)
+        s.recordDistance(15000)
+        assertTrue(s.accepts(route, 15000))
+        assertEquals(1 to 15000, s.closest)
+
+        // 상황별 연습은 거리를 따지지 않는다.
+        val practice = CourseSearch("테스트", start, 5.0, true, listOf(PracticeElement.U_TURN), RouteOption.RECOMMENDED)
+        assertTrue(practice.accepts(listOf(TBTInfo(TurnType.TURN_UTURN, 100.0, "")), 20000))
     }
 
     // 남은 거리가 첫 경유지까지만 올 때: 회전 목록 합(전체)을 쓰고 시간은 같은 비율로 늘린다.
