@@ -5,6 +5,7 @@ import ai.pleos.playground.navi.constants.NavigationStatus
 import ai.pleos.playground.navi.constants.RouteOption
 import ai.pleos.playground.navi.constants.WaypointIndex
 import ai.pleos.playground.navi.data.CurrentLocationInfo
+import ai.pleos.playground.navi.data.DestinationInfo
 import ai.pleos.playground.navi.data.DestinationArrivedInfo
 import ai.pleos.playground.vehicle.Vehicle
 import ai.pleos.playground.vehicle.api.model.area.SeatArea
@@ -179,6 +180,9 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 if (awaitingRoute && routeStart != null) {
                     checkCandidate(tbtInfoList)
+                } else if (awaitingRoute) {
+                    // 기본 내비가 '경로 시작' 신호 없이 안내를 시작하는 경우가 있어, 거리·시간은 목적지 정보로 받는다.
+                    naviHelper.getDestinationInfo()
                 } else {
                     session?.onTbt(tbtInfoList)
                     showDriveGuidance(nextPractice(tbtInfoList), nextLanePrep(tbtInfoList), tbtInfoList.size)
@@ -215,14 +219,29 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 후보 경로 계산이 끝났다. 경로 시작 신호(거리·시간)는 사용자가 기본 내비에서 '안내 시작'을 눌러야 온다.
-        // 그래서 여기서부터는 시간 제한 없이 기다린다. 그만두려면 '취소'를 누른다.
+        // 후보 경로 계산이 끝났다. '경로 시작' 신호가 안 올 수 있어 회전 목록과 목적지 정보를 직접 묻는다.
         override fun onRoutingCompleted() {
             Log.d("JbRoute", "경로 계산 끝")
             runOnUiThread {
                 if (!awaitingRoute || routeStart != null) return@runOnUiThread
-                handler.removeCallbacks(searchTimeout)
-                searchMessage("기본 내비에서 '안내 시작'을 눌러 주세요")
+                naviHelper.getDestinationInfo()
+            }
+        }
+
+        // 경로 시작 신호 대신 쓰는 거리·시간. 남은 거리·시간이 곧 이번 경로 전체다(아직 출발 전).
+        // shortcut: remainTime 단위를 초로 가정(RouteStartInfo.duration과 같은 단위). 에뮬레이터 로그로 확인한다.
+        override fun onDestinationInfo(destinationInfo: DestinationInfo) {
+            Log.d("JbRoute", "목적지 정보 ${destinationInfo.remainDistance}m ${destinationInfo.remainTime}")
+            runOnUiThread {
+                if (!awaitingRoute || routeStart != null || destinationInfo.remainDistance <= 0) return@runOnUiThread
+                routeStart = RouteStartInfo(
+                    duration = destinationInfo.remainTime,
+                    distance = destinationInfo.remainDistance,
+                    tollFare = destinationInfo.tollFare,
+                    name = destinationInfo.name,
+                    remainDestinationChargingValue = 0,
+                )
+                naviHelper.getTBTInfo()
             }
         }
 
@@ -262,7 +281,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
         if (required.isEmpty()) {
-            searchMessage("코스를 만드는 중이에요. 기본 내비에서 '안내 시작'을 누르면 코스 정보가 나와요")
+            searchMessage("코스를 만드는 중이에요. 잠시 뒤 코스 정보가 나와요")
             handler.postDelayed(searchTimeout, SEARCH_TIMEOUT_MS)
             naviHelper.getCurrentLocationInfo()
             return
