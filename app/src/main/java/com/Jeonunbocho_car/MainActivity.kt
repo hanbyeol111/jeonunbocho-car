@@ -34,6 +34,8 @@ import android.text.style.RelativeSizeSpan
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.graphics.Rect
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -549,12 +551,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     // 설정 화면(코스 고르기·출발)은 위에 '주행 중' 판을 함께 깔고, 규제 상태에 따라 보이거나 숨긴다.
-    private fun showSetupScreen(layout: Int) {
+    // passThrough: 판이 깔려도 누를 수 있는 버튼. 기어를 D로 둔 채(Idling) 출발하는 경우를 위해 출발 버튼만 연다.
+    private fun showSetupScreen(layout: Int, passThrough: Int? = null) {
         handler.removeCallbacks(hideDrivingNotice)
         setContentView(layout)
         val block = layoutInflater.inflate(R.layout.view_driving_block, null)
         // 투명한 판이 터치를 모두 받아 아래 버튼이 눌리지 않게 하고, 누를 때마다 안내를 띄운다.
-        block.setOnClickListener { showDrivingNotice() }
+        // 통과 버튼 위의 터치는 받지 않아 아래 버튼으로 내려간다.
+        val open = Rect()
+        // 판 자체가 클릭 가능하면 통과시킨 터치도 판이 먹으므로 끈다. 막는 일은 아래 리스너가 한다.
+        block.isClickable = false
+        block.setOnTouchListener { _, e ->
+            val target = passThrough?.let { findViewById<View?>(it) }
+            if (target != null && target.getGlobalVisibleRect(open) &&
+                open.contains(e.rawX.toInt(), e.rawY.toInt())
+            ) return@setOnTouchListener false
+            if (e.actionMasked == MotionEvent.ACTION_UP) showDrivingNotice()
+            true
+        }
         addContentView(
             block,
             ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT),
@@ -805,7 +819,7 @@ class MainActivity : AppCompatActivity() {
 
     // route: 길 찾기로 기본 내비에 걸어 둔 순환 경로의 요약. 있으면 뒤로 갈 때 경로를 취소한다.
     private fun showConfirm(title: String, route: RouteSummary? = null) {
-        showSetupScreen(R.layout.screen_confirm)
+        showSetupScreen(R.layout.screen_confirm, passThrough = R.id.btnStart)
         findViewById<TextView>(R.id.courseInfo).text = title
         findViewById<Button>(R.id.btnStart).setOnClickListener { showChecklist(title, route) }
         findViewById<Button>(R.id.btnBack).setOnClickListener {
@@ -851,7 +865,7 @@ class MainActivity : AppCompatActivity() {
 
     // 출발 전 확인. 뒤로 가면 경로를 그대로 둔 채 코스 확인으로 돌아간다.
     private fun showChecklist(title: String, route: RouteSummary?) {
-        showSetupScreen(R.layout.screen_checklist)
+        showSetupScreen(R.layout.screen_checklist, passThrough = R.id.btnGo)
         findViewById<Button>(R.id.btnBack).setOnClickListener { showConfirm(title, route) }
         findViewById<Button>(R.id.btnGo).setOnClickListener { showDrive(title, route) }
         val container = findViewById<LinearLayout>(R.id.checkRows)
