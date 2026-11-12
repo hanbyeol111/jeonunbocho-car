@@ -586,6 +586,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // 시스템이 도중에 리소스 설정을 새로 고치면 키운 밀도가 원래대로 돌아갈 수 있어, 화면을 그릴 때마다 다시 적용한다.
+    override fun setContentView(layoutResID: Int) {
+        applyDesignScale()
+        super.setContentView(layoutResID)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applyDesignScale()
