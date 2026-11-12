@@ -107,4 +107,18 @@ class RoutePlannerTest {
         repeat(MAX_SEARCH_ATTEMPTS - 1) { assertTrue(s.nextAttempt()) }
         assertFalse(s.nextAttempt())
     }
+
+    // 맞는 길이 없어 앞서 찾은 후보를 고르면, 그 후보의 경유지로 돌아가고 상황이 없어도 받아들인다.
+    @Test
+    fun chosenCandidateUsesItsWaypointsAndIsAccepted() {
+        val s = search(listOf(PracticeElement.TUNNEL))
+        val second = run { s.nextAttempt(); s.waypoints }
+        repeat(MAX_SEARCH_ATTEMPTS - 2) { s.nextAttempt() }
+        val noTunnel = listOf(TBTInfo(TurnType.TURN_LEFT, 100.0, ""))
+        assertFalse(s.accepts(noTunnel))
+
+        s.choose(1)
+        assertEquals(second, s.waypoints)
+        assertTrue(s.accepts(noTunnel))
+    }
 }

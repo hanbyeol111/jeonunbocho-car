@@ -35,6 +35,8 @@ import android.text.style.RelativeSizeSpan
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.graphics.Typeface
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -298,7 +300,13 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.searchAttemptLine).visibility = View.VISIBLE
         findViewById<TextView>(R.id.searchAttempt).text = "${s.attempt + 1}"
         val names = s.required.joinToString(", ") { it.label }
-        progressText.text = if (names.isEmpty()) "순환 코스를 찾는 중" else "${names}${subjectParticle(names)} 있는 길을 찾는 중"
+        progressText.text = when {
+            s.chosen != null -> "${s.attempt + 1}번 코스를 다시 불러오는 중"
+            names.isEmpty() -> "순환 코스를 찾는 중"
+            else -> "${names}${subjectParticle(names)} 있는 길을 찾는 중"
+        }
+        findViewById<View>(R.id.searchPick).visibility = View.GONE
+        findViewById<View>(R.id.btnPick).visibility = View.GONE
         val steps = findViewById<LinearLayout>(R.id.searchSteps)
         for (i in 0 until steps.childCount) {
             val step = steps.getChildAt(i)
@@ -312,12 +320,14 @@ class MainActivity : AppCompatActivity() {
         val start = routeStart ?: return
         handler.removeCallbacks(searchTimeout)
         awaitingRoute = false
-        if (!s.matches(tbtList)) {
+        val summary = summarizeRoute(start.distance, start.duration, tbtList)
+        s.found[s.attempt] = summary
+        if (!s.accepts(tbtList)) {
             searchStepFailed()
             return
         }
         search = null
-        showConfirm(s.title, summarizeRoute(start.distance, start.duration, tbtList))
+        showConfirm(s.title, summary)
     }
 
     // 응답이 없거나 오류가 나거나 필요한 상황이 없으면 다음 후보로 넘어간다.
@@ -330,13 +340,78 @@ class MainActivity : AppCompatActivity() {
             findViewById<TextView?>(R.id.searchProgress)?.text = "현재 위치를 받지 못했어요. 다시 시도해 주세요"
             return
         }
-        if (s.nextAttempt()) {
+        // 고른 후보를 다시 불러오지 못했으면 후보 고르기로 돌아간다.
+        if (s.chosen == null && s.nextAttempt()) {
             requestCandidate()
+            return
+        }
+        if (s.found.isNotEmpty()) {
+            showCandidates(s)
             return
         }
         search = null
         naviHelper.cancelRoute()
         findViewById<TextView?>(R.id.searchProgress)?.text = "이 근처에서 맞는 길을 찾지 못했어요"
+    }
+
+    // 필요한 상황이 모두 들어간 길은 없었지만 경로를 받은 후보가 있으면, 번호 칸을 눌러 다시 보고 고르게 한다.
+    private fun showCandidates(s: CourseSearch) {
+        val names = s.required.joinToString(", ") { it.label }
+        findViewById<View?>(R.id.searchAttemptLine)?.visibility = View.GONE
+        findViewById<TextView?>(R.id.searchProgress)?.text = when {
+            s.chosen != null -> "코스를 다시 불러오지 못했어요. 번호를 눌러 다시 골라 주세요"
+            names.isEmpty() -> "번호를 눌러 앞서 찾은 코스를 골라 주세요"
+            else -> "${names}${subjectParticle(names)} 모두 들어간 길은 찾지 못했어요. 번호를 눌러 앞서 찾은 코스를 골라 주세요"
+        }
+        val pick = findViewById<TextView>(R.id.searchPick)
+        val pickButton = findViewById<Button>(R.id.btnPick)
+        pick.visibility = View.GONE
+        pickButton.visibility = View.GONE
+        val steps = findViewById<LinearLayout>(R.id.searchSteps)
+        steps.removeAllViews()
+        steps.layoutParams = steps.layoutParams.apply { height = dp(72) }
+        val cells = (0 until MAX_SEARCH_ATTEMPTS).map { i ->
+            TextView(this).apply {
+                text = "${i + 1}"
+                gravity = Gravity.CENTER
+                textSize = 30f
+                setTypeface(typeface, Typeface.BOLD)
+                setBackgroundResource(R.drawable.bg_pill)
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
+                    .apply { if (i > 0) marginStart = dp(8) }
+                // 경로를 받지 못한 후보(응답 없음·오류)는 고를 수 없다.
+                isEnabled = i in s.found
+                alpha = if (isEnabled) 1f else 0.3f
+                steps.addView(this)
+            }
+        }
+        fun select(index: Int) {
+            cells.forEachIndexed { i, cell ->
+                val on = i == index
+                cell.backgroundTintList = colorOf(if (on) R.color.jb_on_block else R.color.white)
+                cell.setTextColor(getColor(if (on) R.color.white else R.color.jb_on_block))
+            }
+            val route = s.found.getValue(index)
+            val situations = buildList {
+                if (route.uTurns > 0) add("유턴 ${route.uTurns}곳")
+                route.situations.forEach { (name, count) -> add("$name ${count}곳") }
+            }.joinToString(", ").ifEmpty { "연습 상황 없음" }
+            pick.text = "${index + 1}번 코스 · ${"%.1f".format(route.distanceM / 1000.0)}km · 약 ${route.minutes}분\n$situations"
+            pick.visibility = View.VISIBLE
+            pickButton.visibility = View.VISIBLE
+            pickButton.setOnClickListener {
+                cells.forEach { it.isClickable = false }
+                s.choose(index)
+                requestCandidate()
+            }
+        }
+        cells.forEachIndexed { i, cell ->
+            cell.setTextColor(getColor(R.color.jb_on_block))
+            cell.backgroundTintList = colorOf(R.color.white)
+            if (cell.isEnabled) cell.setOnClickListener { select(i) }
+        }
+        // 처음에는 앞서 찾은 후보 중 첫 번째를 보여 준다.
+        select(s.found.keys.min())
     }
 
     private fun cancelSearch() {
