@@ -391,7 +391,9 @@ class MainActivity : AppCompatActivity() {
             return
         }
         search = null
-        showConfirm(s.title, summarizeRoute(start.distance, start.duration, tbtList))
+        val (distance, duration) = routeTotals(start.distance, start.duration, tbtList.sumOf { it.distance })
+        Log.d("JbRoute", "코스 거리 받은 값 ${start.distance}m ${start.duration}s → 회전 목록 합 ${distance}m ${duration}s")
+        showConfirm(s.title, summarizeRoute(distance, duration, tbtList))
     }
 
     // 응답이 없거나 오류가 나거나 필요한 상황이 없으면 다음 후보로 넘어간다.

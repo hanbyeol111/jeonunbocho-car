@@ -123,6 +123,15 @@ class RoutePlannerTest {
         assertTrue(s.accepts(noTunnel))
     }
 
+    // 남은 거리가 첫 경유지까지만 올 때: 회전 목록 합(전체)을 쓰고 시간은 같은 비율로 늘린다.
+    @Test
+    fun routeTotalsUseTbtSumWhenReportedIsOnlyFirstLeg() {
+        assertEquals(30000 to 3600, routeTotals(10000, 1200, 30000.0))
+        // 받은 값이 이미 전체면 그대로 쓴다.
+        assertEquals(12000 to 1080, routeTotals(12000, 1080, 11950.0))
+        assertEquals(0 to 0, routeTotals(0, 0, 5000.0))
+    }
+
     // 찾는 도중에는 이미 요청해 본 후보까지만 다시 볼 수 있다.
     @Test
     fun onlyAlreadyRequestedCandidatesCanBeRevisited() {

@@ -77,6 +77,14 @@ class CourseSearch(
     }
 }
 
+// 코스 전체 거리·시간. 목적지 정보의 남은 거리가 첫 경유지까지만일 수 있어, 회전 목록의 구간 합이 더 길면 그 합을 쓴다.
+// shortcut: 시간은 같은 비율로 늘린 추정치. 구간별 시간을 주는 API를 찾으면 바꾼다.
+fun routeTotals(reportedM: Int, reportedS: Int, tbtTotalM: Double): Pair<Int, Int> {
+    val total = tbtTotalM.toInt()
+    if (reportedM <= 0 || total <= reportedM) return reportedM to reportedS
+    return total to (reportedS.toLong() * total / reportedM).toInt()
+}
+
 // 출발 전 코스 확인 화면에 보여줄 요약. 모두 내비가 준 경로 데이터에서 센다.
 data class RouteSummary(
     val distanceM: Int,
