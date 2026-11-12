@@ -18,6 +18,7 @@ import ai.pleos.playground.navi.helper.listener.NaviHelperEventListener
 import android.car.Car
 import android.car.drivingstate.CarUxRestrictionsManager
 import android.content.res.ColorStateList
+import android.content.res.Configuration
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.Spanned
@@ -727,6 +728,7 @@ class MainActivity : AppCompatActivity() {
             if (route != null) naviHelper.cancelRoute()
             showHome()
         }
+        showSafetyNote(route)
         if (route == null) return
 
         findViewById<View>(R.id.routeLine).visibility = View.VISIBLE
@@ -763,6 +765,22 @@ class MainActivity : AppCompatActivity() {
         }, onBlock = true)
     }
 
+    // 밤과 고속도로는 막지 않고 권장만 한다. 밤은 차량의 주간·야간 모드(앱의 어두운 화면과 같은 기준)로 판단한다.
+    private fun showSafetyNote(route: RouteSummary?) {
+        val night = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
+            Configuration.UI_MODE_NIGHT_YES
+        val highway = route?.practiceElements?.contains(PracticeElement.HIGHWAY_IC) == true
+        val notes = buildList {
+            if (night) add("밤에는 길이 잘 안 보여요. 짧은 코스부터 달려 보길 권해요")
+            if (highway) add("처음 고속도로에 갈 때는 운전에 익숙한 사람과 함께 타기를 권해요")
+        }
+        if (notes.isEmpty()) return
+        findViewById<TextView>(R.id.safetyNote).apply {
+            text = notes.joinToString("\n")
+            visibility = View.VISIBLE
+        }
+    }
+
     // route: 길 찾기로 만든 경로. 목적지 안내처럼 없으면 거리는 첫 회전 목록에서, 예상 시간은 0으로 둔다.
     private fun showDrive(courseInfo: String, route: RouteSummary?) {
         setContentView(R.layout.screen_drive)
@@ -796,6 +814,7 @@ class MainActivity : AppCompatActivity() {
             findViewById<TextView>(R.id.earnedLabel).text = "끝까지 달리면 포인트를 받아요"
         }
 
+        if (record.elements.any { it.rerouted }) findViewById<View>(R.id.resultNote).visibility = View.VISIBLE
         findViewById<TextView>(R.id.earnedPoints).text = if (arrived) "%+dp".format(earned.total) else "0p"
         val required = progress.required
         findViewById<TextView>(R.id.resultLevel).text = "지금 Lv.${progress.level}"
@@ -805,7 +824,7 @@ class MainActivity : AppCompatActivity() {
         addRows(findViewById(R.id.resultRows), buildList {
             record.elements.forEach {
                 val label = when {
-                    it.rerouted -> "${it.element.label} · 재탐색"
+                    it.rerouted -> "${it.element.label} · 놓침(감점 없음)"
                     it.turnSignalOn -> "${it.element.label} · 방향지시등 켬"
                     else -> "${it.element.label} · 방향지시등 안 켬"
                 }

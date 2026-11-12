@@ -65,6 +65,20 @@
             app:trackThickness="12dp" />
     </LinearLayout>
 
+    <!-- 연습 상황을 놓쳤을 때만 보인다. 무리하지 않고 지나간 것을 탓하지 않는다. -->
+    <TextView
+        android:id="@+id/resultNote"
+        style="@style/Jb.OnBlock"
+        android:layout_width="match_parent"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/bg_block"
+        android:backgroundTint="@color/jb_butter"
+        android:paddingHorizontal="26dp"
+        android:paddingVertical="16dp"
+        android:text="놓친 연습은 다음에 다시 해요. 무리하지 않고 지나간 건 잘한 거예요"
+        android:textSize="22sp"
+        android:visibility="gone" />
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
