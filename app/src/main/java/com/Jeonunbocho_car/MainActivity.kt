@@ -1,6 +1,7 @@
 package com.Jeonunbocho_car
 
 import ai.pleos.playground.navi.constants.NaviErrorCode
+import ai.pleos.playground.navi.constants.NavigationStatus
 import ai.pleos.playground.navi.constants.RouteOption
 import ai.pleos.playground.navi.constants.WaypointIndex
 import ai.pleos.playground.navi.data.CurrentLocationInfo
@@ -48,7 +49,9 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.slider.Slider
 
-private const val SEARCH_TIMEOUT_MS = 15_000L
+// 경로 계산 끝 신호가 안 올 때를 위한 대기 시간. 사용자가 '안내 시작'을 누를 여유를 둔다.
+// shortcut: 60초는 임의 값. 에뮬레이터에서 신호 순서를 확인하고 조정한다.
+private const val SEARCH_TIMEOUT_MS = 60_000L
 private const val DRIVING_NOTICE_MS = 5_000L
 private const val MAX_TIGHT_TURNS = 3
 
@@ -209,6 +212,21 @@ class MainActivity : AppCompatActivity() {
                 routeStart = routeStartInfo
                 naviHelper.getTBTInfo()
             }
+        }
+
+        // 후보 경로 계산이 끝났다. 경로 시작 신호(거리·시간)는 사용자가 기본 내비에서 '안내 시작'을 눌러야 온다.
+        // 그래서 여기서부터는 시간 제한 없이 기다린다. 그만두려면 '취소'를 누른다.
+        override fun onRoutingCompleted() {
+            Log.d("JbRoute", "경로 계산 끝")
+            runOnUiThread {
+                if (!awaitingRoute || routeStart != null) return@runOnUiThread
+                handler.removeCallbacks(searchTimeout)
+                findViewById<TextView?>(R.id.searchProgress)?.text = "기본 내비에서 '안내 시작'을 눌러 주세요"
+            }
+        }
+
+        override fun onNavigationStatus(status: NavigationStatus) {
+            Log.d("JbRoute", "내비 상태 $status")
         }
 
         override fun onError(errorCode: NaviErrorCode) {
