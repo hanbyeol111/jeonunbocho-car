@@ -75,16 +75,7 @@
             android:layout_marginTop="16dp"
             android:textSize="30sp" />
 
-        <!-- 맞는 길이 없을 때 고른 후보의 요약 -->
-        <TextView
-            android:id="@+id/searchPick"
-            style="@style/Jb.OnBlock"
-            android:layout_marginTop="16dp"
-            android:lineSpacingExtra="4dp"
-            android:textSize="26sp"
-            android:visibility="gone" />
-
-        <!-- 찾는 동안은 진행 막대, 다 찾은 뒤 맞는 길이 없으면 번호 칸(눌러서 후보 보기)으로 바뀐다 -->
+        <!-- 후보 번호 칸. 이미 본 번호를 누르면 그 후보를 기본 내비에 다시 띄운다(코드에서 채운다) -->
         <LinearLayout
             android:id="@+id/searchSteps"
             android:layout_width="match_parent"
@@ -93,14 +84,6 @@
             android:orientation="horizontal" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btnPick"
-        style="@style/Jb.Button.Primary"
-        android:layout_width="match_parent"
-        android:layout_height="96dp"
-        android:layout_marginTop="16dp"
-        android:text="이 코스로 하기"
-        android:visibility="gone" />
 
     <TextView
         style="@style/Jb.Label"

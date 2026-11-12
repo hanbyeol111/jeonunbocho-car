@@ -47,9 +47,6 @@ class CourseSearch(
     var attempt = 0
         private set
 
-    // 경로 정보를 받은 후보(시도 번호 → 요약). 맞는 길이 없을 때 사용자가 이 중에서 고른다.
-    val found = mutableMapOf<Int, RouteSummary>()
-
     // 사용자가 고른 후보. 고른 뒤에는 필요한 상황이 없어도 받아들인다.
     var chosen: Int? = null
         private set

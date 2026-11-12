@@ -333,8 +333,6 @@ class MainActivity : AppCompatActivity() {
             names.isEmpty() -> "순환 코스를 찾는 중"
             else -> "${names}${subjectParticle(names)} 있는 길을 찾는 중"
         }
-        findViewById<View>(R.id.searchPick).visibility = View.GONE
-        findViewById<View>(R.id.btnPick).visibility = View.GONE
         // 지금 후보는 진하게, 이미 본 후보는 흰 칸(눌러서 다시 보기), 아직 안 본 후보는 흐리게.
         val steps = findViewById<LinearLayout>(R.id.searchSteps)
         for (i in 0 until steps.childCount) {
@@ -363,14 +361,12 @@ class MainActivity : AppCompatActivity() {
         val start = routeStart ?: return
         handler.removeCallbacks(searchTimeout)
         awaitingRoute = false
-        val summary = summarizeRoute(start.distance, start.duration, tbtList)
-        s.found[s.attempt] = summary
         if (!s.accepts(tbtList)) {
             searchStepFailed()
             return
         }
         search = null
-        showConfirm(s.title, summary)
+        showConfirm(s.title, summarizeRoute(start.distance, start.duration, tbtList))
     }
 
     // 응답이 없거나 오류가 나거나 필요한 상황이 없으면 다음 후보로 넘어간다.
@@ -388,9 +384,10 @@ class MainActivity : AppCompatActivity() {
             requestCandidate()
             return
         }
-        // 후보 고르기는 길 찾기 화면에서만 한다(순환 코스는 받은 첫 경로를 바로 쓰므로 해당 없음).
-        if (s.found.isNotEmpty() && findViewById<View?>(R.id.searchSteps) != null) {
-            showCandidates(s)
+        // 길 찾기 화면이면 찾기를 끝내지 않고, 본 후보 번호를 눌러 기본 내비에 다시 띄우게 한다.
+        // (순환 코스는 길 찾기 화면이 없어 여기서 끝낸다.)
+        if (findViewById<View?>(R.id.searchSteps) != null) {
+            showRevisitAll(s)
             return
         }
         search = null
@@ -398,49 +395,24 @@ class MainActivity : AppCompatActivity() {
         searchMessage("이 근처에서 맞는 길을 찾지 못했어요")
     }
 
-    // 필요한 상황이 모두 들어간 길은 없었지만 경로를 받은 후보가 있으면, 번호 칸을 눌러 다시 보고 고르게 한다.
-    private fun showCandidates(s: CourseSearch) {
+    // 후보를 다 봤거나 다시 띄우기에 실패했을 때: 본 후보 번호를 모두 누를 수 있게 한다.
+    private fun showRevisitAll(s: CourseSearch) {
         val names = s.required.joinToString(", ") { it.label }
-        findViewById<View?>(R.id.searchAttemptLine)?.visibility = View.GONE
-        findViewById<TextView?>(R.id.searchProgress)?.text = when {
-            s.chosen != null -> "코스를 다시 불러오지 못했어요. 번호를 눌러 다시 골라 주세요"
-            names.isEmpty() -> "번호를 눌러 앞서 찾은 코스를 골라 주세요"
-            else -> "${names}${subjectParticle(names)} 모두 들어간 길은 찾지 못했어요. 번호를 눌러 앞서 찾은 코스를 골라 주세요"
-        }
-        val pick = findViewById<TextView>(R.id.searchPick)
-        val pickButton = findViewById<Button>(R.id.btnPick)
-        pick.visibility = View.GONE
-        pickButton.visibility = View.GONE
+        findViewById<View>(R.id.searchAttemptLine).visibility = View.GONE
+        searchMessage(
+            if (s.chosen != null) "코스를 다시 불러오지 못했어요. 번호를 눌러 다시 띄워 주세요"
+            else "${names}${subjectParticle(names)} 들어간 길을 찾지 못했어요. 번호를 누르면 앞서 본 코스를 다시 띄워요"
+        )
         val steps = findViewById<LinearLayout>(R.id.searchSteps)
-        val cells = (0 until steps.childCount).map { steps.getChildAt(it) as TextView }
-        cells.forEachIndexed { i, cell ->
-            // 경로를 받지 못한 후보(응답 없음·오류)는 고를 수 없다.
-            cell.isEnabled = i in s.found
-            cell.alpha = if (cell.isEnabled) 1f else 0.3f
-            cell.setOnClickListener(null)
+        for (i in 0 until steps.childCount) {
+            val cell = steps.getChildAt(i) as TextView
+            val seen = i <= s.furthest
+            cell.backgroundTintList = colorOf(R.color.white)
+            cell.setTextColor(getColor(R.color.jb_on_block))
+            cell.alpha = if (seen) 1f else 0.35f
+            if (seen) cell.setOnClickListener { revisitCandidate(s, i) } else cell.setOnClickListener(null)
+            cell.isClickable = seen
         }
-        fun select(index: Int) {
-            cells.forEachIndexed { i, cell ->
-                val on = i == index
-                cell.backgroundTintList = colorOf(if (on) R.color.jb_on_block else R.color.white)
-                cell.setTextColor(getColor(if (on) R.color.white else R.color.jb_on_block))
-            }
-            val route = s.found.getValue(index)
-            val situations = buildList {
-                if (route.uTurns > 0) add("유턴 ${route.uTurns}곳")
-                route.situations.forEach { (name, count) -> add("$name ${count}곳") }
-            }.joinToString(", ").ifEmpty { "연습 상황 없음" }
-            pick.text = "${index + 1}번 코스 · ${"%.1f".format(route.distanceM / 1000.0)}km · 약 ${route.minutes}분\n$situations"
-            pick.visibility = View.VISIBLE
-            pickButton.visibility = View.VISIBLE
-            pickButton.setOnClickListener {
-                cells.forEach { it.isEnabled = true }
-                revisitCandidate(s, index)
-            }
-        }
-        cells.forEachIndexed { i, cell -> if (cell.isEnabled) cell.setOnClickListener { select(i) } }
-        // 처음에는 앞서 찾은 후보 중 첫 번째를 보여 준다.
-        select(s.found.keys.min())
     }
 
     private fun cancelSearch() {
