@@ -11,6 +11,9 @@
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
     <!-- Vehicle SDK: 방향지시등 -->
     <uses-permission android:name="pleos.car.permission.CAR_LIGHTS" />
+    <!-- Vehicle SDK: 출발 전 확인의 기어·브레이크 페달·조향각 / 운전석 안전벨트 -->
+    <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
+    <uses-permission android:name="pleos.car.permission.CAR_SEATS" />
 
     <application
         android:allowBackup="true"

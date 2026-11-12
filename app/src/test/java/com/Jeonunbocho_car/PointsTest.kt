@@ -152,4 +152,25 @@ class PointsTest {
 
         assertEquals(4, earned.penalty)
     }
+
+    // 방향지시등을 못 읽는 차종: '안 켬'으로 감점하지도, 보너스를 주지도 않는다. 상황 포인트는 그대로.
+    @Test
+    fun noTurnSignalScoringWhenCarCannotReadIt() {
+        val earned = calculatePoints(
+            DriveRecord(
+                distanceKm = 0.0,
+                estimatedMinutes = 0,
+                elements = listOf(
+                    PassedElement(PracticeElement.U_TURN, turnSignalOn = false),
+                    PassedElement(PracticeElement.ROUNDABOUT, turnSignalOn = true),
+                ),
+                laneChangeNoSignalCount = 1,
+                turnSignalMeasured = false,
+            )
+        )
+
+        assertEquals(0, earned.penalty)
+        assertEquals(0, earned.turnSignalBonus)
+        assertEquals(29, earned.elements)
+    }
 }

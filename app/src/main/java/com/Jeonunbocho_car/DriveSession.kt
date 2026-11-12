@@ -4,7 +4,12 @@ import ai.pleos.playground.navi.data.TBTInfo
 
 // 한 번의 주행 기록. 내비 회전 목록·재탐색·방향지시등 신호를 받아 통과한 연습 상황을 센다.
 // plannedDistanceM: 출발 전 경로 거리. 모르면(목적지 안내) 첫 회전 목록의 거리 합을 쓴다.
-class DriveSession(private var plannedDistanceM: Double?, private val estimatedMinutes: Int) {
+// signalMeasured: 이 차량에서 방향지시등을 읽을 수 있는지. 못 읽으면 방향지시등 평가를 뺀다.
+class DriveSession(
+    private var plannedDistanceM: Double?,
+    private val estimatedMinutes: Int,
+    var signalMeasured: Boolean = true,
+) {
     private val passed = mutableListOf<PassedElement>()
     private var ahead: List<PracticeElement> = emptyList()
     private var near = false
@@ -73,5 +78,6 @@ class DriveSession(private var plannedDistanceM: Double?, private val estimatedM
         distanceKm = if (arrived) (plannedDistanceM ?: 0.0) / 1000 else drivenKm,
         estimatedMinutes = if (arrived) estimatedMinutes else 0,
         elements = passed.toList(),
+        turnSignalMeasured = signalMeasured,
     )
 }

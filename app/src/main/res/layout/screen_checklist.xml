@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 출발 전 확인. 정차 중에만 보는 화면이라 주행 중 설정 제한 때는 다른 설정 화면처럼 막힌다. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="32dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnBack"
+            style="@style/Jb.Button.Back"
+            android:layout_width="wrap_content"
+            android:layout_height="64dp"
+            android:layout_marginEnd="20dp"
+            android:text="뒤로" />
+
+        <TextView
+            style="@style/Jb.HeaderTitle"
+            android:text="출발 전 확인" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="22dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_block"
+            android:backgroundTint="@color/jb_surface"
+            android:orientation="vertical"
+            android:paddingHorizontal="28dp"
+            android:paddingVertical="8dp">
+
+            <TextView style="@style/Jb.CheckTitle" android:text="시트와 핸들" />
+            <TextView style="@style/Jb.CheckText" android:text="페달을 끝까지 밟아도 무릎이 살짝 굽혀지고, 핸들에 손이 편하게 닿게 맞춰요." />
+            <TextView android:id="@+id/statusSteering" style="@style/Jb.CheckStatus" />
+            <View style="@style/Jb.CheckDivider" />
+
+            <TextView style="@style/Jb.CheckTitle" android:text="룸미러" />
+            <TextView style="@style/Jb.CheckText" android:text="앉은 자세에서 뒤 유리 전체가 보이게 맞춰요." />
+            <View style="@style/Jb.CheckDivider" />
+
+            <TextView style="@style/Jb.CheckTitle" android:text="사이드 미러" />
+            <TextView style="@style/Jb.CheckText" android:text="양쪽 모두 내 차 몸체가 미러 안쪽 끝에 조금만 보이게 맞춰요." />
+            <View style="@style/Jb.CheckDivider" />
+
+            <TextView style="@style/Jb.CheckTitle" android:text="안전벨트" />
+            <TextView style="@style/Jb.CheckText" android:text="운전자와 함께 탄 모든 사람이 매요." />
+            <TextView android:id="@+id/statusBelt" style="@style/Jb.CheckStatus" />
+            <View style="@style/Jb.CheckDivider" />
+
+            <TextView style="@style/Jb.CheckTitle" android:text="기어와 주차 브레이크" />
+            <TextView style="@style/Jb.CheckText" android:text="주차 브레이크를 풀고, 기어를 P에서 D로 바꾸기 전에 한 번 더 확인해요." />
+            <TextView android:id="@+id/statusGear" style="@style/Jb.CheckStatus" />
+            <View style="@style/Jb.CheckDivider" />
+
+            <TextView style="@style/Jb.CheckTitle" android:text="계기판" />
+            <TextView style="@style/Jb.CheckText" android:text="경고등이 켜져 있지 않은지, 연료가 충분한지 확인해요." />
+        </LinearLayout>
+    </ScrollView>
+
+    <Button
+        android:id="@+id/btnGo"
+        style="@style/Jb.Button.Primary"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:layout_marginTop="16dp"
+        android:text="다 확인했어요, 출발" />
+</LinearLayout>

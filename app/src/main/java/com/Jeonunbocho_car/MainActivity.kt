@@ -6,6 +6,14 @@ import ai.pleos.playground.navi.constants.WaypointIndex
 import ai.pleos.playground.navi.data.CurrentLocationInfo
 import ai.pleos.playground.navi.data.DestinationArrivedInfo
 import ai.pleos.playground.vehicle.Vehicle
+import ai.pleos.playground.vehicle.api.model.area.SeatArea
+import ai.pleos.playground.vehicle.api.model.capability.AccessType
+import ai.pleos.playground.vehicle.constant.area.SeatValue
+import ai.pleos.playground.vehicle.constant.control.VehicleGear
+import ai.pleos.playground.vehicle.listener.BrakePedalStatusListener
+import ai.pleos.playground.vehicle.listener.GearSelectionListener
+import ai.pleos.playground.vehicle.listener.SeatBeltBuckledStateListener
+import ai.pleos.playground.vehicle.listener.SteeringWheelAngleListener
 import ai.pleos.playground.vehicle.constant.area.TurnSignalValue
 import ai.pleos.playground.vehicle.listener.TurnSignalStateListener
 import ai.pleos.playground.navi.data.RequestWaypointInfo
@@ -77,6 +85,8 @@ class MainActivity : AppCompatActivity() {
     // 주행 화면 큰 카드에 지금 보이는 내용(회전·단계). 바뀌었는지 보는 데 쓴다.
     private var shownKey: String? = null
     private var vehicle: Vehicle? = null
+    // 차종마다 방향지시등 지원이 다르다. 지원을 확인했거나 신호가 실제로 들어왔을 때만 true.
+    private var turnSignalSupported = false
 
     // 주행 규제(CarUxRestrictions). 주행 중이면 설정 화면을 막는다.
     private var car: Car? = null
@@ -91,12 +101,61 @@ class MainActivity : AppCompatActivity() {
     }
     private val turnSignalListener = object : TurnSignalStateListener {
         override fun onTurnSignalStateUpdated(state: TurnSignalValue?) {
-            runOnUiThread { session?.onTurnSignal(state == TurnSignalValue.LEFT || state == TurnSignalValue.RIGHT) }
+            runOnUiThread {
+                if (state != null) markTurnSignalSupported()
+                session?.onTurnSignal(state == TurnSignalValue.LEFT || state == TurnSignalValue.RIGHT)
+            }
         }
 
         override fun onFailed(e: Exception) {
             Log.d("JbDrive", "방향지시등 신호 실패", e)
+            runOnUiThread { turnSignalSupported = false }
         }
+    }
+
+    // 출발 전 확인에 보여 줄 기어·브레이크 페달·조향각·운전석 안전벨트. 리스너는 다른 스레드에서 올 수 있다.
+    private var carState = CarState()
+    private fun updateCar(change: (CarState) -> CarState) = runOnUiThread {
+        carState = change(carState)
+        showCarStatus()
+    }
+    private val gearListener = object : GearSelectionListener {
+        override fun onSelected(gear: VehicleGear?) = updateCar { it.copy(gear = gear) }
+        override fun onFailed(e: Exception) { Log.d("JbCar", "기어 실패", e) }
+    }
+    private val brakeListener = object : BrakePedalStatusListener {
+        override fun onBrakePedalStatusUpdated(status: Boolean?) = updateCar { it.copy(brakePressed = status) }
+        override fun onFailed(e: Exception) { Log.d("JbCar", "브레이크 실패", e) }
+    }
+    private val steeringListener = object : SteeringWheelAngleListener {
+        override fun onSteeringWheelAngleUpdated(angle: Float?) = updateCar { it.copy(steeringDeg = angle) }
+        override fun onFailed(e: Exception) { Log.d("JbCar", "조향각 실패", e) }
+    }
+    private val beltListener = object : SeatBeltBuckledStateListener {
+        override fun onSeatBeltBuckledStateUpdated(state: Boolean?) = updateCar { it.copy(beltBuckled = state) }
+        override fun onFailed(e: Exception) { Log.d("JbCar", "안전벨트 실패", e) }
+    }
+    // 운전석. 국내 차량 기준 왼쪽 앞자리.
+    private val driverSeat = SeatArea(SeatValue.ROW_1_LEFT)
+
+    // 출발 전 확인 화면이 떠 있을 때만 줄을 바꾼다. 값이 없으면(미지원) 그 줄은 숨긴다.
+    private fun showCarStatus() {
+        listOf(
+            R.id.statusSteering to steeringStatus(carState.steeringDeg),
+            R.id.statusBelt to beltStatus(carState.beltBuckled),
+            R.id.statusGear to gearStatus(carState.gear, carState.brakePressed),
+        ).forEach { (id, text) ->
+            findViewById<TextView?>(id)?.apply {
+                this.text = text
+                visibility = if (text == null) View.GONE else View.VISIBLE
+            }
+        }
+    }
+
+    // 주행 도중에 지원이 확인돼도 그 주행 기록에 반영한다.
+    private fun markTurnSignalSupported() {
+        turnSignalSupported = true
+        session?.signalMeasured = true
     }
 
     // 전운보초는 소리를 내지 않고, 주행 화면 문구만 바꾼다.
@@ -445,11 +504,30 @@ class MainActivity : AppCompatActivity() {
         try {
             vehicle = Vehicle(applicationContext).also {
                 it.initialize()
+                it.getTurnSignal().checkTurnSignalStateCapabilities(
+                    onComplete = { c ->
+                        val readable = c.accessType == AccessType.READ || c.accessType == AccessType.READ_WRITE
+                        Log.d("JbDrive", "방향지시등 지원=${c.accessType}")
+                        runOnUiThread { if (readable) markTurnSignalSupported() }
+                    },
+                    onFailed = { e -> Log.d("JbDrive", "방향지시등 지원 확인 실패", e) },
+                )
                 it.getTurnSignal().registerTurnSignalState(turnSignalListener)
             }
         } catch (e: Exception) {
             Log.d("JbDrive", "차량 연결 실패", e)
             vehicle = null
+        }
+        // 출발 전 확인용 신호. 차종마다 지원이 달라 하나가 실패해도 나머지는 계속 받는다.
+        vehicle?.let { v ->
+            listOf<Pair<String, () -> Unit>>(
+                "기어" to { v.getGear().registerGearSelection(gearListener) },
+                "브레이크" to { v.getBrake().registerBrakePedalStatus(brakeListener) },
+                "조향각" to { v.getSteeringWheel().registerSteeringWheelAngle(steeringListener) },
+                "안전벨트" to { v.getSeat().registerSeatBeltBuckledState(driverSeat, beltListener) },
+            ).forEach { (name, register) ->
+                try { register() } catch (e: Exception) { Log.d("JbCar", "$name 등록 실패", e) }
+            }
         }
         // 주행 규제. 차량용이 아닌 기기에는 android.car가 없을 수 있어 실패해도 앱은 계속 동작한다.
         try {
@@ -723,7 +801,7 @@ class MainActivity : AppCompatActivity() {
     private fun showConfirm(title: String, route: RouteSummary? = null) {
         showSetupScreen(R.layout.screen_confirm)
         findViewById<TextView>(R.id.courseInfo).text = title
-        findViewById<Button>(R.id.btnStart).setOnClickListener { showDrive(title, route) }
+        findViewById<Button>(R.id.btnStart).setOnClickListener { showChecklist(title, route) }
         findViewById<Button>(R.id.btnBack).setOnClickListener {
             if (route != null) naviHelper.cancelRoute()
             showHome()
@@ -765,6 +843,14 @@ class MainActivity : AppCompatActivity() {
         }, onBlock = true)
     }
 
+    // 출발 전 확인. 뒤로 가면 경로를 그대로 둔 채 코스 확인으로 돌아간다.
+    private fun showChecklist(title: String, route: RouteSummary?) {
+        showSetupScreen(R.layout.screen_checklist)
+        findViewById<Button>(R.id.btnBack).setOnClickListener { showConfirm(title, route) }
+        findViewById<Button>(R.id.btnGo).setOnClickListener { showDrive(title, route) }
+        showCarStatus()
+    }
+
     // 밤과 고속도로는 막지 않고 권장만 한다. 밤은 차량의 주간·야간 모드(앱의 어두운 화면과 같은 기준)로 판단한다.
     private fun showSafetyNote(route: RouteSummary?) {
         val night = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
@@ -784,7 +870,7 @@ class MainActivity : AppCompatActivity() {
     // route: 길 찾기로 만든 경로. 목적지 안내처럼 없으면 거리는 첫 회전 목록에서, 예상 시간은 0으로 둔다.
     private fun showDrive(courseInfo: String, route: RouteSummary?) {
         setContentView(R.layout.screen_drive)
-        session = DriveSession(route?.distanceM?.toDouble(), route?.minutes ?: 0)
+        session = DriveSession(route?.distanceM?.toDouble(), route?.minutes ?: 0, turnSignalSupported)
         shownKey = null
         findViewById<TextView>(R.id.driveCourse).text = "연습 중 · $courseInfo"
         if (naviConnected) naviHelper.getTBTInfo()
@@ -825,6 +911,7 @@ class MainActivity : AppCompatActivity() {
             record.elements.forEach {
                 val label = when {
                     it.rerouted -> "${it.element.label} · 놓침(감점 없음)"
+                    !record.turnSignalMeasured -> it.element.label
                     it.turnSignalOn -> "${it.element.label} · 방향지시등 켬"
                     else -> "${it.element.label} · 방향지시등 안 켬"
                 }
@@ -836,6 +923,7 @@ class MainActivity : AppCompatActivity() {
                 add(label to value)
             }
             if (record.elements.isEmpty()) add("통과한 연습 상황" to "없음")
+            if (!record.turnSignalMeasured) add("방향지시등" to "이 차량에서는 확인할 수 없어요")
             if (!arrived) {
                 add("달린 거리" to "%.1fkm".format(record.distanceKm))
                 return@buildList
@@ -857,6 +945,10 @@ class MainActivity : AppCompatActivity() {
         naviHelper.release()
         vehicle?.let {
             it.getTurnSignal().unregisterTurnSignalState(turnSignalListener)
+            runCatching { it.getGear().unregisterGearSelection(gearListener) }
+            runCatching { it.getBrake().unregisterBrakePedalStatus(brakeListener) }
+            runCatching { it.getSteeringWheel().unregisterSteeringWheelAngle(steeringListener) }
+            runCatching { it.getSeat().unregisterSeatBeltBuckledState(driverSeat, beltListener) }
             it.release()
         }
         uxManager?.unregisterListener()
