@@ -22,9 +22,9 @@ android {
 
     buildTypes {
         release {
+            // 최적화(R8)를 켜면 kotlin 클래스 이름이 바뀌어 앱 시작 때 IllegalAccessError로 꺼졌다(2026-11-12 에뮬레이터).
             optimization {
-                enable = true
-                packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
+                enable = false
             }
         }
     }
