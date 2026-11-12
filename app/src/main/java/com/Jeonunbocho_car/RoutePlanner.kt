@@ -61,8 +61,13 @@ class CourseSearch(
 
     fun accepts(tbtList: List<TBTInfo>): Boolean = chosen != null || matches(tbtList)
 
-    // 앞서 찾은 후보를 다시 요청한다. 경유지는 시도 번호로 정해지므로 같은 길이 다시 나온다.
+    // 지금까지 요청해 본 가장 뒤 후보. 이 번호까지는 언제든 다시 볼 수 있다.
+    var furthest = 0
+        private set
+
+    // 앞서 본 후보를 다시 요청한다. 경유지는 시도 번호로 정해지므로 같은 경유지로 다시 찾는다.
     fun choose(index: Int) {
+        require(index in 0..furthest) { "아직 찾지 않은 후보: $index" }
         attempt = index
         chosen = index
     }
@@ -70,6 +75,7 @@ class CourseSearch(
     // 다음 시도가 남아 있으면 true.
     fun nextAttempt(): Boolean {
         attempt++
+        if (attempt < MAX_SEARCH_ATTEMPTS) furthest = maxOf(furthest, attempt)
         return attempt < MAX_SEARCH_ATTEMPTS
     }
 }

@@ -105,5 +105,5 @@
     <TextView
         style="@style/Jb.Label"
         android:layout_marginTop="18dp"
-        android:text="기본 내비에 후보 경로가 뜨면 '안내 시작'을 눌러 주세요. 찾는 동안 경로가 바뀔 수 있어요" />
+        android:text="기본 내비에 후보 경로가 뜨면 '안내 시작'을 눌러 주세요. 번호를 누르면 앞서 본 코스를 다시 볼 수 있어요" />
 </LinearLayout>

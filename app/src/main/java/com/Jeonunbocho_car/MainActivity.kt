@@ -222,7 +222,7 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 if (!awaitingRoute || routeStart != null) return@runOnUiThread
                 handler.removeCallbacks(searchTimeout)
-                findViewById<TextView?>(R.id.searchProgress)?.text = "기본 내비에서 '안내 시작'을 눌러 주세요"
+                searchMessage("기본 내비에서 '안내 시작'을 눌러 주세요")
             }
         }
 
@@ -245,26 +245,54 @@ class MainActivity : AppCompatActivity() {
         required: List<PracticeElement>,
         option: RouteOption,
     ) {
-        showSetupScreen(R.layout.screen_searching)
-        findViewById<Button>(R.id.btnBack).setOnClickListener { cancelSearch() }
-        findViewById<TextView>(R.id.searchTitle).text = title
+        pendingSearch = { here -> CourseSearch(title, here, distanceKm, clockwise, required, option) }
+        // 순환 코스는 찾을 상황이 없어 첫 경로를 그대로 쓰므로, 길 찾기 화면 없이 코스 확인 화면에서 기다린다.
+        if (required.isEmpty()) {
+            showConfirm(title)
+            findViewById<Button>(R.id.btnBack).setOnClickListener { cancelSearch() }
+            findViewById<Button>(R.id.btnStart).apply { isEnabled = false; alpha = 0.4f }
+        } else {
+            showSetupScreen(R.layout.screen_searching)
+            findViewById<Button>(R.id.btnBack).setOnClickListener { cancelSearch() }
+            findViewById<TextView>(R.id.searchTitle).text = title
+        }
         if (!naviConnected) {
-            findViewById<TextView>(R.id.searchProgress).text = "내비에 연결된 뒤 다시 시도해 주세요"
+            pendingSearch = null
+            searchMessage("내비에 연결된 뒤 다시 시도해 주세요")
+            return
+        }
+        if (required.isEmpty()) {
+            searchMessage("코스를 만드는 중이에요. 기본 내비에서 '안내 시작'을 누르면 코스 정보가 나와요")
+            handler.postDelayed(searchTimeout, SEARCH_TIMEOUT_MS)
+            naviHelper.getCurrentLocationInfo()
             return
         }
         findViewById<TextView>(R.id.searchProgress).text = "현재 위치 확인 중"
         findViewById<TextView>(R.id.searchTotal).text = " / $MAX_SEARCH_ATTEMPTS"
+        // 후보 번호 칸. 이미 본 번호를 누르면 그 후보를 기본 내비에 다시 띄운다.
         val steps = findViewById<LinearLayout>(R.id.searchSteps)
+        steps.layoutParams = steps.layoutParams.apply { height = dp(64) }
         repeat(MAX_SEARCH_ATTEMPTS) { i ->
-            steps.addView(View(this).apply {
+            steps.addView(TextView(this).apply {
+                text = "${i + 1}"
+                gravity = Gravity.CENTER
+                textSize = 28f
+                setTypeface(typeface, Typeface.BOLD)
                 setBackgroundResource(R.drawable.bg_pill)
+                backgroundTintList = colorOf(R.color.white)
+                setTextColor(getColor(R.color.jb_on_block))
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
                     .apply { if (i > 0) marginStart = dp(8) }
             })
         }
-        pendingSearch = { here -> CourseSearch(title, here, distanceKm, clockwise, required, option) }
         handler.postDelayed(searchTimeout, SEARCH_TIMEOUT_MS)
         naviHelper.getCurrentLocationInfo()
+    }
+
+    // 길 찾기 안내 문구. 순환 코스는 코스 확인 화면의 안내 줄에 쓴다.
+    private fun searchMessage(text: String) {
+        val view = findViewById<TextView?>(R.id.searchProgress) ?: findViewById<TextView?>(R.id.routeNote)
+        view?.apply { this.text = text; visibility = View.VISIBLE }
     }
 
     private fun requestCandidate() {
@@ -307,12 +335,27 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<View>(R.id.searchPick).visibility = View.GONE
         findViewById<View>(R.id.btnPick).visibility = View.GONE
+        // 지금 후보는 진하게, 이미 본 후보는 흰 칸(눌러서 다시 보기), 아직 안 본 후보는 흐리게.
         val steps = findViewById<LinearLayout>(R.id.searchSteps)
         for (i in 0 until steps.childCount) {
-            val step = steps.getChildAt(i)
-            step.backgroundTintList = colorOf(if (i <= s.attempt) R.color.jb_on_block else R.color.white)
-            step.alpha = if (i == s.attempt) 0.4f else 1f
+            val cell = steps.getChildAt(i) as TextView
+            val current = i == s.attempt
+            val seen = i <= s.furthest
+            cell.backgroundTintList = colorOf(if (current) R.color.jb_on_block else R.color.white)
+            cell.setTextColor(getColor(if (current) R.color.white else R.color.jb_on_block))
+            cell.alpha = if (seen) 1f else 0.35f
+            if (seen && !current) cell.setOnClickListener { revisitCandidate(s, i) } else cell.setOnClickListener(null)
+            cell.isClickable = seen && !current
         }
+    }
+
+    // 앞서 본 후보를 기본 내비에 다시 띄운다. 이 후보에서 '안내 시작'을 누르면 상황이 없어도 그 코스로 정한다.
+    private fun revisitCandidate(s: CourseSearch, index: Int) {
+        if (search !== s) return
+        handler.removeCallbacks(searchTimeout)
+        awaitingRoute = false
+        s.choose(index)
+        requestCandidate()
     }
 
     private fun checkCandidate(tbtList: List<TBTInfo>) {
@@ -337,7 +380,7 @@ class MainActivity : AppCompatActivity() {
         val s = search
         if (s == null) {
             pendingSearch = null
-            findViewById<TextView?>(R.id.searchProgress)?.text = "현재 위치를 받지 못했어요. 다시 시도해 주세요"
+            searchMessage("현재 위치를 받지 못했어요. 다시 시도해 주세요")
             return
         }
         // 고른 후보를 다시 불러오지 못했으면 후보 고르기로 돌아간다.
@@ -345,13 +388,14 @@ class MainActivity : AppCompatActivity() {
             requestCandidate()
             return
         }
-        if (s.found.isNotEmpty()) {
+        // 후보 고르기는 길 찾기 화면에서만 한다(순환 코스는 받은 첫 경로를 바로 쓰므로 해당 없음).
+        if (s.found.isNotEmpty() && findViewById<View?>(R.id.searchSteps) != null) {
             showCandidates(s)
             return
         }
         search = null
         naviHelper.cancelRoute()
-        findViewById<TextView?>(R.id.searchProgress)?.text = "이 근처에서 맞는 길을 찾지 못했어요"
+        searchMessage("이 근처에서 맞는 길을 찾지 못했어요")
     }
 
     // 필요한 상황이 모두 들어간 길은 없었지만 경로를 받은 후보가 있으면, 번호 칸을 눌러 다시 보고 고르게 한다.
@@ -368,22 +412,12 @@ class MainActivity : AppCompatActivity() {
         pick.visibility = View.GONE
         pickButton.visibility = View.GONE
         val steps = findViewById<LinearLayout>(R.id.searchSteps)
-        steps.removeAllViews()
-        steps.layoutParams = steps.layoutParams.apply { height = dp(72) }
-        val cells = (0 until MAX_SEARCH_ATTEMPTS).map { i ->
-            TextView(this).apply {
-                text = "${i + 1}"
-                gravity = Gravity.CENTER
-                textSize = 30f
-                setTypeface(typeface, Typeface.BOLD)
-                setBackgroundResource(R.drawable.bg_pill)
-                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
-                    .apply { if (i > 0) marginStart = dp(8) }
-                // 경로를 받지 못한 후보(응답 없음·오류)는 고를 수 없다.
-                isEnabled = i in s.found
-                alpha = if (isEnabled) 1f else 0.3f
-                steps.addView(this)
-            }
+        val cells = (0 until steps.childCount).map { steps.getChildAt(it) as TextView }
+        cells.forEachIndexed { i, cell ->
+            // 경로를 받지 못한 후보(응답 없음·오류)는 고를 수 없다.
+            cell.isEnabled = i in s.found
+            cell.alpha = if (cell.isEnabled) 1f else 0.3f
+            cell.setOnClickListener(null)
         }
         fun select(index: Int) {
             cells.forEachIndexed { i, cell ->
@@ -400,16 +434,11 @@ class MainActivity : AppCompatActivity() {
             pick.visibility = View.VISIBLE
             pickButton.visibility = View.VISIBLE
             pickButton.setOnClickListener {
-                cells.forEach { it.isClickable = false }
-                s.choose(index)
-                requestCandidate()
+                cells.forEach { it.isEnabled = true }
+                revisitCandidate(s, index)
             }
         }
-        cells.forEachIndexed { i, cell ->
-            cell.setTextColor(getColor(R.color.jb_on_block))
-            cell.backgroundTintList = colorOf(R.color.white)
-            if (cell.isEnabled) cell.setOnClickListener { select(i) }
-        }
+        cells.forEachIndexed { i, cell -> if (cell.isEnabled) cell.setOnClickListener { select(i) } }
         // 처음에는 앞서 찾은 후보 중 첫 번째를 보여 준다.
         select(s.found.keys.min())
     }

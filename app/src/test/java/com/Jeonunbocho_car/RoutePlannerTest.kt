@@ -5,6 +5,7 @@ import ai.pleos.playground.navi.constants.TurnType
 import ai.pleos.playground.navi.data.TBTInfo
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.asin
@@ -120,5 +121,18 @@ class RoutePlannerTest {
         s.choose(1)
         assertEquals(second, s.waypoints)
         assertTrue(s.accepts(noTunnel))
+    }
+
+    // 찾는 도중에는 이미 요청해 본 후보까지만 다시 볼 수 있다.
+    @Test
+    fun onlyAlreadyRequestedCandidatesCanBeRevisited() {
+        val s = search(listOf(PracticeElement.TUNNEL))
+        s.nextAttempt()
+        s.nextAttempt()
+        assertEquals(2, s.furthest)
+        s.choose(0)
+        assertEquals(2, s.furthest)
+        assertEquals(0, s.attempt)
+        assertThrows(IllegalArgumentException::class.java) { s.choose(3) }
     }
 }
