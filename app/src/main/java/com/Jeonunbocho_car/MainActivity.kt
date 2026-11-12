@@ -54,6 +54,7 @@ import com.google.android.material.slider.Slider
 // 경로 계산 끝 신호가 안 올 때를 위한 대기 시간. 사용자가 '안내 시작'을 누를 여유를 둔다.
 // shortcut: 60초는 임의 값. 에뮬레이터에서 신호 순서를 확인하고 조정한다.
 private const val SEARCH_TIMEOUT_MS = 60_000L
+private const val TBT_RETRY_MS = 1_000L
 private const val DRIVING_NOTICE_MS = 5_000L
 private const val MAX_TIGHT_TURNS = 3
 
@@ -178,7 +179,12 @@ class MainActivity : AppCompatActivity() {
             Log.d("JbTBT", "목록 ${tbtInfoList.size}개")
             tbtInfoList.forEach { Log.d("JbTBT", "${it.type} ${it.distance}m ${it.description}") }
             runOnUiThread {
-                if (awaitingRoute && routeStart != null) {
+                // 경로가 바뀌는 순간 빈 목록이 먼저 온다. 길 찾기 중에는 회전이 담긴 목록만 쓴다.
+                if (awaitingRoute && tbtInfoList.isEmpty()) {
+                    // 다음 목록이 저절로 안 올 수 있어 1초 뒤 다시 묻는다(길 찾기 대기 시간 안에서만 반복된다).
+                    handler.postDelayed({ if (awaitingRoute) naviHelper.getTBTInfo() }, TBT_RETRY_MS)
+                    return@runOnUiThread
+                } else if (awaitingRoute && routeStart != null) {
                     checkCandidate(tbtInfoList)
                 } else if (awaitingRoute) {
                     // 기본 내비가 '경로 시작' 신호 없이 안내를 시작하는 경우가 있어, 거리·시간은 목적지 정보로 받는다.
