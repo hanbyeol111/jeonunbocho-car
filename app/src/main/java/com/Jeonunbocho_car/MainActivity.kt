@@ -35,7 +35,6 @@ import android.text.style.RelativeSizeSpan
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.graphics.Rect
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -569,21 +568,29 @@ class MainActivity : AppCompatActivity() {
     }
 
     // 설정 화면(코스 고르기·출발)은 위에 '주행 중' 판을 함께 깔고, 규제 상태에 따라 보이거나 숨긴다.
-    // passThrough: 판이 깔려도 누를 수 있는 버튼. 기어를 D로 둔 채(Idling) 출발하는 경우를 위해 출발 버튼만 연다.
+    // 판이 깔려도 누를 수 있는 버튼: 뒤로(화면 이동일 뿐 설정이 아니다)와 passThrough.
+    // passThrough는 기어를 D로 둔 채(Idling) 출발하는 경우를 위한 출발 버튼이다.
     private fun showSetupScreen(layout: Int, passThrough: Int? = null) {
+        val open = listOfNotNull(R.id.btnBack, passThrough)
         handler.removeCallbacks(hideDrivingNotice)
         setContentView(layout)
         val block = layoutInflater.inflate(R.layout.view_driving_block, null)
         // 투명한 판이 터치를 모두 받아 아래 버튼이 눌리지 않게 하고, 누를 때마다 안내를 띄운다.
         // 통과 버튼 위의 터치는 받지 않아 아래 버튼으로 내려간다.
-        val open = Rect()
         // 판 자체가 클릭 가능하면 통과시킨 터치도 판이 먹으므로 끈다. 막는 일은 아래 리스너가 한다.
         block.isClickable = false
+        val at = IntArray(2)
         block.setOnTouchListener { _, e ->
-            val target = passThrough?.let { findViewById<View?>(it) }
-            if (target != null && target.getGlobalVisibleRect(open) &&
-                open.contains(e.rawX.toInt(), e.rawY.toInt())
-            ) return@setOnTouchListener false
+            // 화면 분할로 창이 화면 가운데에 있을 수 있어, 터치(rawX/Y)와 버튼 위치를 모두 화면 기준 좌표로 비교한다.
+            val onOpenButton = open.any { id ->
+                val target = findViewById<View?>(id) ?: return@any false
+                if (!target.isShown) return@any false
+                target.getLocationOnScreen(at)
+                val x = e.rawX - at[0]
+                val y = e.rawY - at[1]
+                x >= 0 && y >= 0 && x < target.width && y < target.height
+            }
+            if (onOpenButton) return@setOnTouchListener false
             if (e.actionMasked == MotionEvent.ACTION_UP) showDrivingNotice()
             true
         }
