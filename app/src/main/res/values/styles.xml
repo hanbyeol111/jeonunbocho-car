@@ -109,43 +109,6 @@
         <item name="android:textStyle">bold</item>
     </style>
 
-    <!-- 출발 전 확인 한 항목: 제목, 설명, 구분선 -->
-    <style name="Jb.CheckTitle" parent="">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">16dp</item>
-        <item name="android:textColor">@color/jb_text</item>
-        <item name="android:textSize">26sp</item>
-        <item name="android:textStyle">bold</item>
-    </style>
-
-    <style name="Jb.CheckText" parent="">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">4dp</item>
-        <item name="android:layout_marginBottom">16dp</item>
-        <item name="android:textColor">@color/jb_text_secondary</item>
-        <item name="android:textSize">20sp</item>
-    </style>
-
-    <!-- 차량에서 읽은 지금 상태. 차가 지원하지 않으면 숨긴다. -->
-    <style name="Jb.CheckStatus" parent="">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">-8dp</item>
-        <item name="android:layout_marginBottom">16dp</item>
-        <item name="android:textColor">@color/jb_text</item>
-        <item name="android:textSize">22sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:visibility">gone</item>
-    </style>
-
-    <style name="Jb.CheckDivider" parent="">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">2dp</item>
-        <item name="android:background">@color/jb_background</item>
-    </style>
-
     <!-- 카드 안의 작은 제목 -->
     <style name="Jb.Label" parent="">
         <item name="android:layout_width">wrap_content</item>

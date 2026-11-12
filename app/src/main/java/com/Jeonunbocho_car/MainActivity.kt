@@ -37,6 +37,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -138,17 +139,22 @@ class MainActivity : AppCompatActivity() {
     // 운전석. 국내 차량 기준 왼쪽 앞자리.
     private val driverSeat = SeatArea(SeatValue.ROW_1_LEFT)
 
-    // 출발 전 확인 화면이 떠 있을 때만 줄을 바꾼다. 값이 없으면(미지원) 그 줄은 숨긴다.
+    // 출발 전 확인 화면의 항목 줄. 화면을 다시 열 때 새로 채운다(다른 화면에서 갱신돼도 보이지 않을 뿐 무해하다).
+    private val checkRows = mutableMapOf<CheckItem, View>()
+
+    // 차량에서 읽은 상태: 정상이면 민트 칩·자동 체크, 확인이 필요하면 노란 칩·체크 해제. 값이 없으면(미지원) 숨긴다.
     private fun showCarStatus() {
-        listOf(
-            R.id.statusSteering to steeringStatus(carState.steeringDeg),
-            R.id.statusBelt to beltStatus(carState.beltBuckled),
-            R.id.statusGear to gearStatus(carState.gear, carState.brakePressed),
-        ).forEach { (id, text) ->
-            findViewById<TextView?>(id)?.apply {
-                this.text = text
-                visibility = if (text == null) View.GONE else View.VISIBLE
+        checkRows.forEach { (item, row) ->
+            val status = carState.statusOf(item)
+            val chip = row.findViewById<TextView>(R.id.checkStatus)
+            if (status == null) {
+                chip.visibility = View.GONE
+                return@forEach
             }
+            chip.visibility = View.VISIBLE
+            chip.text = (if (status.ok) "✓ " else "! ") + status.text
+            chip.backgroundTintList = colorOf(if (status.ok) R.color.jb_mint else R.color.jb_butter)
+            row.findViewById<CheckBox>(R.id.checkBox).isChecked = status.ok
         }
     }
 
@@ -848,6 +854,22 @@ class MainActivity : AppCompatActivity() {
         showSetupScreen(R.layout.screen_checklist)
         findViewById<Button>(R.id.btnBack).setOnClickListener { showConfirm(title, route) }
         findViewById<Button>(R.id.btnGo).setOnClickListener { showDrive(title, route) }
+        val container = findViewById<LinearLayout>(R.id.checkRows)
+        checkRows.clear()
+        CheckItem.entries.forEachIndexed { i, item ->
+            if (i > 0) container.addView(View(this).apply {
+                setBackgroundColor(getColor(R.color.jb_background))
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(2))
+            })
+            val row = layoutInflater.inflate(R.layout.item_check, container, false)
+            row.findViewById<TextView>(R.id.checkTitle).text = item.title
+            row.findViewById<TextView>(R.id.checkText).text = item.text
+            // 글자를 눌러도 체크되게 한다(차 화면에서 작은 상자만 누르기는 어렵다).
+            val box = row.findViewById<CheckBox>(R.id.checkBox)
+            row.setOnClickListener { box.toggle() }
+            container.addView(row)
+            checkRows[item] = row
+        }
         showCarStatus()
     }
 

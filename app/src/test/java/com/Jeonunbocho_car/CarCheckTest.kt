@@ -16,24 +16,35 @@ class CarCheckTest {
 
     @Test
     fun beltShowsBuckledOrNot() {
-        assertEquals("✓ 운전석 안전벨트를 맸어요", beltStatus(true))
-        assertEquals("아직 운전석 안전벨트를 안 맸어요", beltStatus(false))
+        assertEquals(CheckStatus("운전석 안전벨트를 맸어요", true), beltStatus(true))
+        assertEquals(CheckStatus("아직 운전석 안전벨트를 안 맸어요", false), beltStatus(false))
     }
 
     @Test
     fun steeringIsStraightWithinLimitEitherSide() {
-        assertEquals("✓ 핸들이 똑바로 있어요", steeringStatus(-STRAIGHT_STEERING_DEG))
-        assertEquals("✓ 핸들이 똑바로 있어요", steeringStatus(STRAIGHT_STEERING_DEG))
-        assertEquals("핸들이 돌아가 있어요. 바퀴를 똑바로 하고 출발해요", steeringStatus(-45f))
+        assertEquals(true, steeringStatus(-STRAIGHT_STEERING_DEG)?.ok)
+        assertEquals(true, steeringStatus(STRAIGHT_STEERING_DEG)?.ok)
+        assertEquals(false, steeringStatus(-45f)?.ok)
     }
 
     @Test
     fun brakeIsShownOnlyInPark() {
-        assertEquals("지금 기어 P · ✓ 브레이크 페달을 밟고 있어요", gearStatus(VehicleGear.GEAR_PARK, true))
-        assertEquals("지금 기어 P · 브레이크 페달을 밟고 기어를 바꿔요", gearStatus(VehicleGear.GEAR_PARK, false))
-        assertEquals("지금 기어 P", gearStatus(VehicleGear.GEAR_PARK, null))
-        assertEquals("지금 기어 D", gearStatus(VehicleGear.GEAR_DRIVE, false))
-        assertEquals("지금 기어 D", gearStatus(VehicleGear.GEAR_3, true))
-        assertEquals("지금 기어 R", gearStatus(VehicleGear.GEAR_REVERSE, true))
+        assertEquals(CheckStatus("지금 기어 P · 브레이크 페달을 밟고 있어요", true), gearStatus(VehicleGear.GEAR_PARK, true))
+        assertEquals(CheckStatus("지금 기어 P · 브레이크 페달을 밟고 기어를 바꿔요", false), gearStatus(VehicleGear.GEAR_PARK, false))
+        assertEquals(CheckStatus("지금 기어 P", true), gearStatus(VehicleGear.GEAR_PARK, null))
+        assertEquals(CheckStatus("지금 기어 D", true), gearStatus(VehicleGear.GEAR_DRIVE, false))
+        assertEquals("지금 기어 D", gearStatus(VehicleGear.GEAR_3, true)?.text)
+        assertEquals("지금 기어 R", gearStatus(VehicleGear.GEAR_REVERSE, true)?.text)
+    }
+
+    @Test
+    fun onlyCarReadItemsHaveStatus() {
+        val car = CarState(VehicleGear.GEAR_PARK, true, 0f, true)
+        assertEquals(true, car.statusOf(CheckItem.SEAT)?.ok)
+        assertEquals(true, car.statusOf(CheckItem.BELT)?.ok)
+        assertEquals(true, car.statusOf(CheckItem.GEAR)?.ok)
+        assertNull(car.statusOf(CheckItem.ROOM_MIRROR))
+        assertNull(car.statusOf(CheckItem.SIDE_MIRROR))
+        assertNull(car.statusOf(CheckItem.DASHBOARD))
     }
 }

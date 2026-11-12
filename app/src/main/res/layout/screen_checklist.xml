@@ -31,41 +31,16 @@
         android:layout_marginTop="22dp"
         android:layout_weight="1">
 
+        <!-- 항목은 코드(CheckItem)에서 item_check로 채운다 -->
         <LinearLayout
+            android:id="@+id/checkRows"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_block"
             android:backgroundTint="@color/jb_surface"
             android:orientation="vertical"
-            android:paddingHorizontal="28dp"
-            android:paddingVertical="8dp">
-
-            <TextView style="@style/Jb.CheckTitle" android:text="시트와 핸들" />
-            <TextView style="@style/Jb.CheckText" android:text="페달을 끝까지 밟아도 무릎이 살짝 굽혀지고, 핸들에 손이 편하게 닿게 맞춰요." />
-            <TextView android:id="@+id/statusSteering" style="@style/Jb.CheckStatus" />
-            <View style="@style/Jb.CheckDivider" />
-
-            <TextView style="@style/Jb.CheckTitle" android:text="룸미러" />
-            <TextView style="@style/Jb.CheckText" android:text="앉은 자세에서 뒤 유리 전체가 보이게 맞춰요." />
-            <View style="@style/Jb.CheckDivider" />
-
-            <TextView style="@style/Jb.CheckTitle" android:text="사이드 미러" />
-            <TextView style="@style/Jb.CheckText" android:text="양쪽 모두 내 차 몸체가 미러 안쪽 끝에 조금만 보이게 맞춰요." />
-            <View style="@style/Jb.CheckDivider" />
-
-            <TextView style="@style/Jb.CheckTitle" android:text="안전벨트" />
-            <TextView style="@style/Jb.CheckText" android:text="운전자와 함께 탄 모든 사람이 매요." />
-            <TextView android:id="@+id/statusBelt" style="@style/Jb.CheckStatus" />
-            <View style="@style/Jb.CheckDivider" />
-
-            <TextView style="@style/Jb.CheckTitle" android:text="기어와 주차 브레이크" />
-            <TextView style="@style/Jb.CheckText" android:text="주차 브레이크를 풀고, 기어를 P에서 D로 바꾸기 전에 한 번 더 확인해요." />
-            <TextView android:id="@+id/statusGear" style="@style/Jb.CheckStatus" />
-            <View style="@style/Jb.CheckDivider" />
-
-            <TextView style="@style/Jb.CheckTitle" android:text="계기판" />
-            <TextView style="@style/Jb.CheckText" android:text="경고등이 켜져 있지 않은지, 연료가 충분한지 확인해요." />
-        </LinearLayout>
+            android:paddingHorizontal="24dp"
+            android:paddingVertical="6dp" />
     </ScrollView>
 
     <Button
