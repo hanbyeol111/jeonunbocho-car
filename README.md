@@ -55,6 +55,7 @@ Pleos SDK는 `https://nexus-playground.pleos.ai/repository/maven-releases/` 에�
 | 항목 | 값 |
 |---|---|
 | 에뮬레이터 | Pleos Connect v2.1.0 (Android API 34), AVD 부팅 옵션 Cold boot |
+| 화면 규격 | 2560×1440 px, 160 dpi(`adb shell wm size`, `wm density`). 전운보초는 기본 내비와 화면 분할로 띄우며, 이때 앱 창은 약 841×1210dp. 화면 설계 기준은 600×800dp |
 | 그래픽 카드 | 외장 GPU 필요(Pleos 최소 사양 RTX 3060 6GB급). 개발에는 RTX 4070 Ti SUPER 사용 |
 | 개발 도구 | Android Studio(내장 JDK로 Gradle 실행), compileSdk 37, minSdk 28 |
 | 언어 | Kotlin |
@@ -77,12 +78,13 @@ Pleos SDK는 `https://nexus-playground.pleos.ai/repository/maven-releases/` 에�
 - **화면 크기**: 시안 캔버스(600×800dp)보다 창이 크면 화면 전체를 같은 비율로 키웁니다. 라이트·다크 모드는 시스템 설정을 따릅니다.
 - **로그**: Logcat에서 `JbRoute`(길 찾기), `JbTBT`(회전 목록), `JbDrive`(주행 기록·방향지시등), `JbCar`(출발 전 확인 차량 신호), `JbUx`(주행 규제), `JbScreen`(창 크기)로 걸러 볼 수 있습니다.
 
-## 에뮬레이터에서 확인한 것 (2026-11-12, Pleos Connect v2.1.0)
+## 에뮬레이터에서 확인한 것 (2026-11-12~13, Pleos Connect v2.1.0)
 
 - 순환 코스·상황별 연습의 경로 요청, 코스 확인 화면의 거리·회전 횟수·연습 상황 표시
 - 출발 전 확인의 기어·브레이크 페달·조향각 실시간 표시, 운전석 안전벨트 '안 맨 상태' 표시
-- 기어 D에서 주행 규제로 설정 화면이 막히고, 햣뒤로·출발 버튼은 눌리는 것
+- 기어 D에서 주행 규제로 설정 화면이 막히고, 뒤로·출발 버튼은 눌리는 것
 - 주행 화면 표시와 '주행 끝내기' 후 결과 화면
+- `apk/`의 release APK 설치·실행(2026-11-13)
 - 단위 테스트 66개(경로 판정, 포인트·레벨, 코칭 단계, 차량 상태 표시 등): `./gradlew testDebugUnitTest`
 
 ## 출처
